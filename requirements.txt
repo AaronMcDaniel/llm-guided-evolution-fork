@@ -3,3 +3,4 @@ deap
 transformers
 torch
 torchvision
+tensorboard
