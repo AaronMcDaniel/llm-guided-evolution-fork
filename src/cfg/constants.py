@@ -2,7 +2,9 @@ import os
 import numpy as np
 
 
+
 ROOT_DIR = "/home/hice1/jwarren315/scratch/llm-island-migration/"
+
 # DATA_PATH absolute or relative to ExquisiteNetV2
 DATA_PATH = "./cifar10"
 SOTA_ROOT = os.path.join(ROOT_DIR, 'sota/ExquisiteNetV2')
@@ -55,24 +57,29 @@ Job Sub Constants/Params
 QC_CHECK_BOOL = False
 HUGGING_FACE_BOOL = False
 #LLM_GPU = 'NVIDIAA100-SXM4-80GB|NVIDIAA10080GBPCIe|TeslaV100-PCIE-32GB|QuadroRTX4000|GeForceGTX1080Ti|GeForceGTX1080|TeslaV100-PCIE-32GB|TeslaV100S-PCIE-32GB'
+
 LLM_GPU = 'A100-80GB|H100'
 PYTHON_BASH_SCRIPT_TEMPLATE = """#!/bin/bash
 #SBATCH --job-name=evaluateGene
-#SBATCH -t 8-00:00
+#SBATCH --time=08:00:00
 #SBATCH --gres=gpu:1
+
 #SBATCH -G 1
 #SBATCH -C "A100-80GB|H100"
 #SBATCH --mem-per-gpu 80G
 #SBATCH --time=05:00:00
 #SBATCH -c 12
+
 echo "Launching AIsurBL"
 hostname
 # Load GCC version 9.2.0
 # module load gcc/13.2.0
 module load cuda/12
 module load anaconda3
+
 # Activate Conda environment
-conda activate jackenv
+conda activate llmIslands
+
 # conda info
 
 # Set the TOKENIZERS_PARALLELISM environment variable if needed
@@ -84,13 +91,15 @@ conda activate jackenv
 
 LLM_BASH_SCRIPT_TEMPLATE = """#!/bin/bash
 #SBATCH --job-name=llm_oper
-#SBATCH -t 8-00:00
+#SBATCH --time=08:00:00
 #SBATCH --gres=gpu:1
+
 #SBATCH -G 1
 #SBATCH -C "{}"
 #SBATCH --mem-per-gpu 80G
 #SBATCH -c 12
 #SBATCH --time=05:00:00
+
 echo "Launching AIsurBL"
 hostname
 # Load GCC version 9.2.0
@@ -99,7 +108,7 @@ hostname
 module load cuda/12
 module load anaconda3
 # Activate Conda environment
-conda activate jackenv
+conda activate llmIslands
 # conda info
 
 # Set the TOKENIZERS_PARALLELISM environment variable if needed

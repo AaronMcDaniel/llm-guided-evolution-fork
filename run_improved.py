@@ -99,7 +99,6 @@ Main Job Functions
 def write_bash_script(input_filename_x=f'{SOTA_ROOT}/network.py',
                       input_filename_y=None,
                       output_filename=f'{SOTA_ROOT}/models/network_x.py',
-                      gpu='TeslaV100-PCIE-32GB',
                       python_file='src/llm_mutation.py', 
                       top_p=0.1, temperature=0.2,
                      
@@ -145,7 +144,7 @@ def write_bash_script(input_filename_x=f'{SOTA_ROOT}/network.py',
     else:
         raise ValueError("Invalid python_file argument")
 
-    bash_script_content = LLM_BASH_SCRIPT_TEMPLATE.format(gpu, python_runline)
+    bash_script_content = LLM_BASH_SCRIPT_TEMPLATE.format(python_runline)
     return bash_script_content
 
 def create_bash_file(file_path, **kwargs):
@@ -271,7 +270,6 @@ def create_individual(container, temp_min=0.05, temp_max=0.4):
     successful_sub_flag, job_id, local_output = submit_bash(file_path, 
                                               input_filename_x=f'{SOTA_ROOT}/network.py',
                                               output_filename =f'{SOTA_ROOT}/models/network_{gene_id}.py',
-                                              gpu=LLM_GPU,
                                               python_file='src/llm_mutation.py', 
                                               top_p=0.1, temperature=temperature)
     # Log data
