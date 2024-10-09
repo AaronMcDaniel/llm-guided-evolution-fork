@@ -2,7 +2,6 @@ import os
 import numpy as np
 
 
-
 ROOT_DIR = "/home/hice1/jwarren315/scratch/llm-island-migration/"
 
 # DATA_PATH absolute or relative to ExquisiteNetV2
@@ -78,7 +77,7 @@ module load cuda/12
 module load anaconda3
 
 # Activate Conda environment
-conda activate llmIslands
+conda activate llmIslandsEnv
 
 # conda info
 
@@ -108,7 +107,7 @@ hostname
 module load cuda/12
 module load anaconda3
 # Activate Conda environment
-conda activate llmIslands
+conda activate llmIslandsEnv
 # conda info
 
 # Set the TOKENIZERS_PARALLELISM environment variable if needed
