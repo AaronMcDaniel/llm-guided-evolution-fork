@@ -17,4 +17,6 @@ module load anaconda3
 conda activate llmIntegration #ur local environment
 conda info
 
+export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
+
 python run_improved.py first_test

@@ -24,7 +24,8 @@ else:
 #LLM_MODEL = 'mixtral'
 #LLM_MODEL = 'llama3'
 LLM_MODEL = 'qwen'
-#LLM_MODEL = 'gemma'
+#LLM_MODEL = 'gemma2'
+
 # SEED_PACKAGE_DIR = "./sota/ExquisiteNetV2/divine_seed_module"
 
 """
@@ -39,14 +40,14 @@ NUM_EOT_ELITES = 10
 GENERATION = 0
 PROB_QC = 0.0
 PROB_EOT = 0.25
-num_generations = 30  # Number of generations
-start_population_size = 32
+num_generations = 10  # Number of generations
+start_population_size = 16
 # start_population_size = 144   # Size of the population 124=72
 #population_size = 44 # with cx_prob (0.25) and mute_prob (0.7) you get about %50 successful turnover
 population_size = 8 # with cx_prob (0.25) and mute_prob (0.7) you get about %50 successful turnover
 crossover_probability = 0.35  # Probability of mating two individuals
 mutation_probability = 0.8 # Probability of mutating an individual
-num_elites = 44
+num_elites = 22
 hof_size = 100
 
 
@@ -69,6 +70,7 @@ PYTHON_BASH_SCRIPT_TEMPLATE = """#!/bin/bash
 #SBATCH --time=05:00:00
 #SBATCH -c 12
 
+
 echo "Launching AIsurBL"
 hostname
 # Load GCC version 9.2.0
@@ -83,6 +85,7 @@ conda activate llmIslandsEnv
 
 # Set the TOKENIZERS_PARALLELISM environment variable if needed
 # export TOKENIZERS_PARALLELISM=false
+export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
 
 # Run Python script
 {}
@@ -112,6 +115,7 @@ conda activate llmIslandsEnv
 
 # Set the TOKENIZERS_PARALLELISM environment variable if needed
 # export TOKENIZERS_PARALLELISM=false
+export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
 
 # Run Python script
 {}
