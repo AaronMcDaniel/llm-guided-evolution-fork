@@ -5,7 +5,7 @@ import numpy as np
 ROOT_DIR = "/home/hice1/jwarren315/scratch/llm-island-migration/"
 
 # DATA_PATH absolute or relative to ExquisiteNetV2
-DATA_PATH = "./cifar10"
+DATA_PATH = "/storage/ice1/0/1/gmiao8/llm-island-migration/cifar10"
 SOTA_ROOT = os.path.join(ROOT_DIR, 'sota/ExquisiteNetV2')
 SEED_NETWORK = os.path.join(SOTA_ROOT, "network.py")
 LOCAL = False

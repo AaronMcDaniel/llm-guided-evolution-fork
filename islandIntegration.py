@@ -15,75 +15,6 @@ from src.llm_utils import split_file, retrieve_base_code, mutate_prompts
 from src.cfg.constants import *
 
 
-class Island:
-    def __init__(self, name, model_name, population, toolbox):
-        self.name = name
-        self.model_name = model_name
-        self.population = population
-        self.toolbox = toolbox
-        self.fitness_history = []
-
-        try:
-            if "t5" in self.model_name:
-                self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-                self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
-            else:
-                self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-                self.model = AutoModelForCausalLM.from_pretrained(self.model_name)
-            print(f"{self.name}: LLM and tokenizer loaded.")
-        except Exception as e:
-            print(f"Error loading LLM for {self.name}: {e}")
-
-    def evolve_population(self, num_generations):
-        for _ in range(num_generations):
-            offspring = self.toolbox.select(self.population, len(self.population))
-            offspring = list(map(self.toolbox.clone, offspring))
-
-            for child1, child2 in zip(offspring[::2], offspring[1::2]):
-                if random.random() < crossover_probability:
-                    self.toolbox.mate(child1, child2)
-                    del child1.fitness.values
-                    del child2.fitness.values
-
-            for mutant in offspring:
-                if random.random() < mutation_probability:
-                    self.mutate_with_llm(mutant)
-                    del mutant.fitness.values
-
-            invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            fitnesses = map(self.toolbox.evaluate, invalid_ind)
-            for ind, fit in zip(invalid_ind, fitnesses):
-                ind.fitness.values = fit
-
-            self.population[:] = offspring
-
-    def mutate_with_llm(self, individual):
-        try:
-            prompt = f"Mutate this individual: {individual}"
-            inputs = self.tokenizer(prompt, return_tensors="pt")
-
-            with torch.no_grad():
-                outputs = self.model.generate(
-                    **inputs, max_new_tokens=10, pad_token_id=self.tokenizer.eos_token_id
-                )
-                generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-                print(f"{self.name}: LLM mutation result: {generated_text}")
-        except Exception as e:
-            print(f"{self.name}: Error during LLM mutation: {e}")
-
-
-    def get_best_individual(self):
-        return tools.selBest(self.population, 1)[0]
-
-
-def migrate(islands, num_migrants):
-    for i, island in enumerate(islands):
-        target_island = islands[(i + 1) % len(islands)]
-        migrants = tools.selBest(island.population, num_migrants)
-        island.population = island.population[:-num_migrants]
-        target_island.population.extend(migrants)
-        print(f"Migrated {num_migrants} individuals from {island.name} to {target_island.name}")
-
 
 def print_ancestery(data):
     for gene in data.keys():
@@ -814,16 +745,12 @@ def save_checkpoint(gen, folder_name="checkpoints"):
     
 def load_checkpoint(folder_name="checkpoints", checkpoint_file=None):
     if not os.path.exists(folder_name):
-        print(f"file path {folder_name} does not exist")
         return None, None
     if checkpoint_file is None:
-        print(f"file path {folder_name} exists but {checkpoint_file} is none")
         checkpoint_files = sorted(os.listdir(folder_name), reverse=True)
         checkpoint_file = checkpoint_files[0] if checkpoint_files else None
     if checkpoint_file:
-        print(f"checkpoint file {checkpoint_file} exists")
         filepath = os.path.join(folder_name, checkpoint_file)
-        print(f"filepath: {filepath}")
         with open(filepath, 'rb') as file:
             checkpoint_data = pickle.load(file)
         print(f"Loaded checkpoint from {filepath}")
@@ -835,8 +762,6 @@ def load_checkpoint(folder_name="checkpoints", checkpoint_file=None):
 
 def true_nsga2(pop, k):
     pop = tools.selNSGA2(pop, len(pop)) # 10 diff
-    print(len(pop))
-    print(k)
     new_pop = tools.selTournamentDCD(pop, k) # mults of 4
     return new_pop
 
@@ -893,98 +818,99 @@ if __name__ == "__main__":
     check_and_update_fitness(population)
     # print_ancestery(GLOBAL_DATA_ANCESTERY)
     # Evolution
-    for gen in range(start_gen, num_generations):
-        GEN_COUNT = gen
-        TOP_N_GENES = tools.selSPEA2(population, NUM_EOT_ELITES)
-        box_print(f"STARTING GENERATION: {gen}", new_line_end=False)
-        print_population(population, GLOBAL_DATA)
-        box_print(f"Invalid Removal", print_bbox_len=60, new_line_end=False)
-        # Remove individuals with placeholder fitness
-        population = [ind for ind in population if ind.fitness.values != INVALID_FITNESS_MAX]
-        print_population(population, GLOBAL_DATA)
-        # Select the next generation's parents
-        box_print(f"Selection", print_bbox_len=60, new_line_end=False)
-        # These bypass the mutation and cross-over so we dont lose them
-        elites = tools.selSPEA2(population, num_elites)
-        # Select the next generation's parents
-        offspring = toolbox.select(population, population_size)
-        print_population(offspring, GLOBAL_DATA)
-        
-        print([len(GLOBAL_DATA_HIST), len(GLOBAL_DATA), len(population), len(offspring)])
-        # Clone the selected individuals
-        offspring = list(map(toolbox.clone, offspring))
-        GLOBAL_DATA_HIST.update(GLOBAL_DATA.copy())
+    gen = start_gen
+    GEN_COUNT = gen
+    TOP_N_GENES = tools.selSPEA2(population, NUM_EOT_ELITES)
+    box_print(f"STARTING GENERATION: {gen}", new_line_end=False)
+    print_population(population, GLOBAL_DATA)
+    box_print(f"Invalid Removal", print_bbox_len=60, new_line_end=False)
+    # Remove individuals with placeholder fitness
+    population = [ind for ind in population if ind.fitness.values != INVALID_FITNESS_MAX]
+    print_population(population, GLOBAL_DATA)
+    # Select the next generation's parents
+    box_print(f"Selection", print_bbox_len=60, new_line_end=False)
+    # These bypass the mutation and cross-over so we dont lose them
+    elites = tools.selSPEA2(population, num_elites)
+    # Select the next generation's parents
+    offspring = toolbox.select(population, population_size)
+    print_population(offspring, GLOBAL_DATA)
+    
+    print([len(GLOBAL_DATA_HIST), len(GLOBAL_DATA), len(population), len(offspring)])
+    # Clone the selected individuals
+    offspring = list(map(toolbox.clone, offspring))
+    GLOBAL_DATA_HIST.update(GLOBAL_DATA.copy())
 
-        # box_print(f"GLOBAL_DATA_ANCESTERY", new_line_end=False)
-        # print_ancestery(GLOBAL_DATA_ANCESTERY)
-        # Apply crossover on the offspring
-        box_print("Mating", print_bbox_len=60, new_line_end=False)
-        for child1, child2 in zip(offspring[::2], offspring[1::2]):
-            if random.random() < crossover_probability:
-                child1, child2 = toolbox.mate(child1, child2)
-                del child1.fitness.values
-                del child2.fitness.values 
-                
-        # box_print(f"GLOBAL_DATA_ANCESTERY", new_line_end=False)
-        # print_ancestery(GLOBAL_DATA_ANCESTERY)
-                
-        box_print("Batch Checking Mated Genes", print_bbox_len=60, new_line_end=False)       
-        offspring = delayed_mate_check(offspring)
-        print_population(offspring, GLOBAL_DATA)
+    # box_print(f"GLOBAL_DATA_ANCESTERY", new_line_end=False)
+    # print_ancestery(GLOBAL_DATA_ANCESTERY)
+    # Apply crossover on the offspring
+    box_print("Mating", print_bbox_len=60, new_line_end=False)
+    for child1, child2 in zip(offspring[::2], offspring[1::2]):
+        if random.random() < crossover_probability:
+            child1, child2 = toolbox.mate(child1, child2)
+            del child1.fitness.values
+            del child2.fitness.values 
+            
+    # box_print(f"GLOBAL_DATA_ANCESTERY", new_line_end=False)
+    # print_ancestery(GLOBAL_DATA_ANCESTERY)
+            
+    box_print("Batch Checking Mated Genes", print_bbox_len=60, new_line_end=False)       
+    offspring = delayed_mate_check(offspring)
+    print_population(offspring, GLOBAL_DATA)
+    
+    # Apply mutation on the offspring
+    box_print("Mutating", print_bbox_len=60, new_line_end=False)
+    for mutant in offspring:
+        if random.random() < mutation_probability:
+            toolbox.mutate(mutant)
+            del mutant.fitness.values
+            
+    box_print(f"GLOBAL_DATA_ANCESTERY", new_line_end=False)
+    print_ancestery(GLOBAL_DATA_ANCESTERY)
+            
+    box_print("Batch Checking Mutated Genes", print_bbox_len=60, new_line_end=False)
+    offspring = delayed_mutate_check(offspring)
+    print_population(offspring, GLOBAL_DATA)
+    
+    # Add elites back to offspring. Usually before the mute and cross but in this case we save them
+    offspring.extend(elites)
+    # After merging the offspring and the elites
+    offspring = remove_duplicates(offspring)
+    elites_keys = [k[0] for k in elites]
+    # Bring back the elite history
+    for k in elites_keys:
+        if k in GLOBAL_DATA_HIST.keys():
+            GLOBAL_DATA[k] = GLOBAL_DATA_HIST[k]
+        """
+        GLOBAL_DATA should have the job information and fitness values
+        When it hits the below in check_and_update_fitness it will load the results from the dict 
+            if GLOBAL_DATA[gene_id]['status'] == "completed":
+        """
         
-        # Apply mutation on the offspring
-        box_print("Mutating", print_bbox_len=60, new_line_end=False)
-        for mutant in offspring:
-            if random.random() < mutation_probability:
-                toolbox.mutate(mutant)
-                del mutant.fitness.values
-                
-        box_print(f"GLOBAL_DATA_ANCESTERY", new_line_end=False)
-        print_ancestery(GLOBAL_DATA_ANCESTERY)
-                
-        box_print("Batch Checking Mutated Genes", print_bbox_len=60, new_line_end=False)
-        offspring = delayed_mutate_check(offspring)
-        print_population(offspring, GLOBAL_DATA)
-        
-        # Add elites back to offspring. Usually before the mute and cross but in this case we save them
-        offspring.extend(elites)
-        # After merging the offspring and the elites
-        offspring = remove_duplicates(offspring)
-        elites_keys = [k[0] for k in elites]
-        # Bring back the elite history
-        for k in elites_keys:
-            if k in GLOBAL_DATA_HIST.keys():
-                GLOBAL_DATA[k] = GLOBAL_DATA_HIST[k]
-            """
-            GLOBAL_DATA should have the job information and fitness values
-            When it hits the below in check_and_update_fitness it will load the results from the dict 
-                if GLOBAL_DATA[gene_id]['status'] == "completed":
-            """
-           
-        # Evaluate the individuals with an invalid fitness
-        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = map(toolbox.evaluate, invalid_ind)
+    # Evaluate the individuals with an invalid fitness
+    invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+    fitnesses = map(toolbox.evaluate, invalid_ind)
 
-        for ind in offspring:
-            # assign placeholder to all so I can check them all at once
-            ind.fitness.values = PLACEHOLDER_FITNESS 
+    for ind in offspring:
+        # assign placeholder to all so I can check them all at once
+        ind.fitness.values = PLACEHOLDER_FITNESS 
 
-        GLOBAL_DATA_HIST.update(GLOBAL_DATA.copy())
-        check_and_update_fitness(offspring)
-        GLOBAL_DATA_HIST.update(GLOBAL_DATA.copy())
-        # Replace the old population with the offspring
-        population[:] = offspring
-        # Gather all the fitnesses in one list and print the stats
-        print_scores(population, FITNESS_WEIGHTS)
-        hof.update(population)
-        save_checkpoint(gen, folder_name=args.checkpoints)
-        LINKED_GENES = {}
-        # mutate x prompts
-        mutate_prompts()
+    GLOBAL_DATA_HIST.update(GLOBAL_DATA.copy())
+    check_and_update_fitness(offspring)
+    GLOBAL_DATA_HIST.update(GLOBAL_DATA.copy())
+    # Replace the old population with the offspring
+    population[:] = offspring
+    # Gather all the fitnesses in one list and print the stats
+    print_scores(population, FITNESS_WEIGHTS)
+    hof.update(population)
+    save_checkpoint(gen, folder_name=args.checkpoints)
+    LINKED_GENES = {}
+    # mutate x prompts
+    mutate_prompts()
         
     print("-- End of Evolution --")
     best_ind = tools.selBest(population, 1)[0]
     print(f"Best Individual: {best_ind}")
     print(f"Best Fitness: {best_ind.fitness.values}")
+    print(f"Finished One Generation")
 
     
