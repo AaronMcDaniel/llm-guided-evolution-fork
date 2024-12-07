@@ -479,7 +479,7 @@ def check4results(gene_id):
         pass
         
 
-def check_and_update_fitness(population, timeout=3600*30, loop_delay=60*30):
+def check_and_update_fitness(population, timeout=3600*30, loop_delay=60):
     """ This function submits jobs and then if submitted it checks for four possibilities.
     
     timeout: (int): seconds until the model run is killed and assigned the max error
@@ -679,7 +679,6 @@ def customCrossover(ind1, ind2):
                                           input_filename_x=f'{SOTA_ROOT}/models/network_{gene_id_1}.py',
                                           input_filename_y=f'{SOTA_ROOT}/models/network_{gene_id_2}.py',
                                           output_filename=f'{SOTA_ROOT}/models/network_{new_gene_id}.py',
-                                          gpu=LLM_GPU,
                                           python_file='src/llm_crossover.py', 
                                           top_p=0.1, temperature=temperature)
 
@@ -750,7 +749,6 @@ def customMutation(individual, indpb, temp_min=0.02, temp_max=0.35):
     successful_sub_flag, job_id, local_output = submit_bash(file_path, 
                                               input_filename_x= f'{SOTA_ROOT}/models/network_{old_gene_id}.py',
                                               output_filename = f'{SOTA_ROOT}/models/network_{new_gene_id}.py',
-                                              gpu=LLM_GPU,
                                               python_file='src/llm_mutation.py', 
                                               top_p=0.1, temperature=temperature)
     
@@ -834,6 +832,7 @@ def load_checkpoint(folder_name="checkpoints", checkpoint_file=None):
 
 
 def true_nsga2(pop, k):
+    print(len(pop))
     pop = tools.selNSGA2(pop, len(pop)) # 10 diff
     print(len(pop))
     print(k)
@@ -907,7 +906,7 @@ if __name__ == "__main__":
         # These bypass the mutation and cross-over so we dont lose them
         elites = tools.selSPEA2(population, num_elites)
         # Select the next generation's parents
-        offspring = toolbox.select(population, population_size)
+        offspring = toolbox.select(population, min(len(population), population_size))
         print_population(offspring, GLOBAL_DATA)
         
         print([len(GLOBAL_DATA_HIST), len(GLOBAL_DATA), len(population), len(offspring)])

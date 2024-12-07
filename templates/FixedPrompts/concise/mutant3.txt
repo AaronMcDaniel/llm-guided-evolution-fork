@@ -1,8 +1,16 @@
-Question: What are some complex modifications that could be considered to potentially improve the performance of the following existing Python code snippet?
+python
+def calculate_accuracy(y_true, y_pred):
+  """Calculates the accuracy of a classification model.
 
-Here is the current code:
+  Args:
+    y_true: The true labels for the data.
+    y_pred: The predicted labels for the data.
 
-(code snippet provided)
+  Returns:
+    The accuracy of the classification model.
+  """
+  return np.sum(y_true == y_pred) / len(y_true)
+
 ```python
 {}
 ```

@@ -397,6 +397,8 @@ def mutate_prompts(n=5):
             llm_code_generator = submit_llama3_hf
         elif LLM_MODEL == 'gemma2':
             llm_code_generator = submit_gemma2_hf
+        elif LLM_MODEL == 'gemma2_local':
+            llm_code_generator = submit_gemma2_local
         output = llm_code_generator(prompt, temperature=temp).strip()
         if "```" in output:
             output = output.split("```")[0]

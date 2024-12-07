@@ -2,4 +2,6 @@
 
 *.out
 0/
-*/__pycache__/
+**/__pycache__/
+checkpoints/
+sota/

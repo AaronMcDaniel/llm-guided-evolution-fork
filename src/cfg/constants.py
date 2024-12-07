@@ -23,6 +23,7 @@ else:
 	# DEVICE = 'cpu'
 #LLM_MODEL = 'mixtral'
 #LLM_MODEL = 'llama3'
+
 LLM_MODEL = 'qwen'
 #LLM_MODEL = 'gemma2'
 
@@ -40,11 +41,11 @@ NUM_EOT_ELITES = 10
 GENERATION = 0
 PROB_QC = 0.0
 PROB_EOT = 0.25
-num_generations = 10  # Number of generations
-start_population_size = 16
+num_generations = 4  # Number of generations
+start_population_size = 30
 # start_population_size = 144   # Size of the population 124=72
 #population_size = 44 # with cx_prob (0.25) and mute_prob (0.7) you get about %50 successful turnover
-population_size = 8 # with cx_prob (0.25) and mute_prob (0.7) you get about %50 successful turnover
+population_size = 4 # with cx_prob (0.25) and mute_prob (0.7) you get about %50 successful turnover
 crossover_probability = 0.35  # Probability of mating two individuals
 mutation_probability = 0.8 # Probability of mutating an individual
 num_elites = 22
