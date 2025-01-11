@@ -12,8 +12,8 @@ hostname
 module load cuda/12
 export CUDA_VISIBLE_DEVICES=0
 
-source /opt/apps/Module/anaconda3/2021.11/bin/activate
-conda activate llm_guided_evolution
+module load anaconda3
+conda activate jackenv
 conda info
 
 python run_improved.py first_test
