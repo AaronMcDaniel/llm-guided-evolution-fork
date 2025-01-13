@@ -30,6 +30,10 @@ def augment_network(input_filename='network.py', output_filename='network_x.py',
     txt2llm = template_txt.format(code2llm.strip())
     code_from_llm = generate_augmented_code(txt2llm, augment_idx-1, apply_quality_control,
                                             top_p, temperature, hugging_face=hugging_face)
+    
+    if not code_from_llm:
+        code_from_llm = txt2llm
+
     note_txt = extract_note(code2llm)
     parts[augment_idx] = f"\n{note_txt}{code_from_llm}\n"
     # prompt_log = f'# Parent Prompt: {template_path} Root Code: {input_filename}\n'

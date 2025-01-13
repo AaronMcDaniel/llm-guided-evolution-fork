@@ -746,12 +746,16 @@ def save_checkpoint(gen, folder_name="checkpoints"):
     
 def load_checkpoint(folder_name="checkpoints", checkpoint_file=None):
     if not os.path.exists(folder_name):
+        print(f"file path {folder_name} does not exist")
         return None, None
     if checkpoint_file is None:
+        print(f"file path {folder_name} exists but {checkpoint_file} is none")
         checkpoint_files = sorted(os.listdir(folder_name), reverse=True)
         checkpoint_file = checkpoint_files[0] if checkpoint_files else None
     if checkpoint_file:
+        print(f"checkpoint file {checkpoint_file} exists")
         filepath = os.path.join(folder_name, checkpoint_file)
+        print(f"filepath: {filepath}")
         with open(filepath, 'rb') as file:
             checkpoint_data = pickle.load(file)
         print(f"Loaded checkpoint from {filepath}")

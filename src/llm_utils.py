@@ -30,7 +30,14 @@ def retrieve_base_code(idx):
 
 def clean_code_from_llm(code_from_llm):
     """Cleans the code received from LLM."""
-    return '\n'.join(code_from_llm.strip().split("```")[1].split('\n')[1:]).strip()
+    try:
+        # Extract and clean code assuming it is enclosed in triple backticks
+        return '\n'.join(code_from_llm.strip().split("```")[1].split('\n')[1:]).strip()
+    except (IndexError, AttributeError) as e:
+        # Print an error message if the code extraction fails
+        print("Runtime Error: No code was generated or the format is incorrect.")
+        return "NO CODE GENERATED\n" + code_from_llm  # Return ERROR
+        #return ""
 
 
 def generate_augmented_code(txt2llm, augment_idx, apply_quality_control, top_p, temperature, hugging_face=False):
@@ -43,6 +50,8 @@ def generate_augmented_code(txt2llm, augment_idx, apply_quality_control, top_p, 
             llm_code_generator = submit_mixtral
         elif LLM_MODEL == 'qwen':
             llm_code_generator = submit_qwen
+        elif LLM_MODEL == 'gemma':
+            llm_code_generator = submit_gemma
         qc_func = llm_code_qc
     else:
         if LLM_MODEL == 'mixtral':
@@ -246,6 +255,45 @@ def submit_qwen(txt2qwen, max_new_tokens=764, top_p=0.15, temperature=0.1,
     )
 
     res = generate_text(txt2qwen)
+    output_txt = res[0]["generated_text"]
+    box_print("LLM OUTPUT", print_bbox_len=60, new_line_end=False)
+    print(output_txt)
+    box_print(f'time to load in seconds: {round(time.time()-start_time)}', print_bbox_len=120, new_line_end=False)   
+    if return_gen is False:
+        return output_txt
+    else:
+        return output_txt, generate_text
+    
+def submit_gemma(txt2gemma, max_new_tokens=764, top_p=0.15, temperature=0.1, 
+                   model_id="google/gemma-2-2b-it", return_gen=False):
+#                   model_id="/home/hice1/jli3325/scratch/.cache/huggingface/hub/models--google--gemma-2-2b-it", return_gen=False):
+    max_new_tokens = np.random.randint(800, 1000)
+    print(f'max_new_tokens: {max_new_tokens}')
+    start_time = time.time()
+    model = transformers.AutoModelForCausalLM.from_pretrained(
+        model_id,
+        trust_remote_code=True,
+        torch_dtype=bfloat16,
+        device_map='auto'
+    )
+    model.eval()
+    print(model.device)
+    tokenizer = transformers.AutoTokenizer.from_pretrained(model_id)
+
+    generate_text = transformers.pipeline(
+        model=model, tokenizer=tokenizer,
+        return_full_text=False,  # if using langchain set True
+        task="text-generation",
+        # we pass model parameters here too
+        temperature=temperature,  # 'randomness' of outputs, 0.0 is the min and 1.0 the max
+        top_p=top_p,  # select from top tokens whose probability add up to 15%
+        top_k=0,  # select from top 0 tokens (because zero, relies on top_p)
+        max_new_tokens=max_new_tokens,  # max number of tokens to generate in the output
+        repetition_penalty=1.1,  # if output begins repeating increase
+        do_sample=True,
+    )
+
+    res = generate_text(txt2gemma)
     output_txt = res[0]["generated_text"]
     box_print("LLM OUTPUT", print_bbox_len=60, new_line_end=False)
     print(output_txt)

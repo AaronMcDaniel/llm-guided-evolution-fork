@@ -23,6 +23,7 @@ else:
 #LLM_MODEL = 'mixtral'
 #LLM_MODEL = 'llama3'
 LLM_MODEL = 'qwen'
+#LLM_MODEL = 'gemma'
 # SEED_PACKAGE_DIR = "./sota/ExquisiteNetV2/divine_seed_module"
 
 """
@@ -66,7 +67,6 @@ PYTHON_BASH_SCRIPT_TEMPLATE = """#!/bin/bash
 #SBATCH -c 12
 echo "Launching AIsurBL"
 hostname
-export HF_HOME=/storage/ice1/5/6/jwarren315/.cache/huggingface
 # Load GCC version 9.2.0
 # module load gcc/13.2.0
 module load cuda/12
@@ -93,7 +93,6 @@ LLM_BASH_SCRIPT_TEMPLATE = """#!/bin/bash
 #SBATCH --time=05:00:00
 echo "Launching AIsurBL"
 hostname
-export HF_HOME=/storage/ice1/5/6/jwarren315/.cache/huggingface
 # Load GCC version 9.2.0
 # module load gcc/13.2.0
 # module load cuda/11.8

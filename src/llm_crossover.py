@@ -34,6 +34,10 @@ def augment_network(input_filename_x, input_filename_y, output_filename,
     # Generate augmented code
     code_from_llm = generate_augmented_code(txt2llm, augment_idx, apply_quality_control,
                                             top_p, temperature, hugging_face=hugging_face)
+    
+    if not code_from_llm:
+        code_from_llm = txt2llm
+    
     # Insert note if present
     temp_txt = parts_x[augment_idx]
     note_txt = extract_note(temp_txt)
