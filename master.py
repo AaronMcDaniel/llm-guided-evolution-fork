@@ -127,13 +127,19 @@ if __name__ == "__main__":
     args = parser.parse_args()
     temp_file = "temptemptemp.sh"
     generations = 10
+    checkpoints = args.checkpoints
+    num_islands = args.islands
+
+    if num_islands > MAX_ISLANDS:
+        print("Number of islands exceeds maximum allowed: " + str(MAX_ISLANDS))
+        exit(1)
     
     for gen in range(generations) :
         print("Starting generation " + str(gen), flush=True)
         job_ids = []
-        for i in range(args.islands):
+        for i in range(num_islands):
             print("Generating Island " + str(i), flush=True)
-            checkpoint_path = os.path.join("checkpoints", "island_" + str(i))
+            checkpoint_path = os.path.join(checkpoints, "island_" + str(i))
             
             job_id = submit_run(temp_file, PYTHON_BASH_SCRIPT_TEMPLATE.format(i, checkpoint_path))
             job_ids.append(job_id)

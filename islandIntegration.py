@@ -792,6 +792,8 @@ if __name__ == "__main__":
     # Parse the arguments
     args = parser.parse_args()
     print(DNA_TXT)
+
+    # Load a checkpoint if available
     checkpoint, start_gen = load_checkpoint(folder_name=args.checkpoints)
     if checkpoint:
         box_print("LOADING CHECKPOINT")
@@ -812,8 +814,8 @@ if __name__ == "__main__":
     # Evaluate the entire population
     for ind in population:
         ind.fitness.values = PLACEHOLDER_FITNESS
-        
     check_and_update_fitness(population)
+
     # print_ancestery(GLOBAL_DATA_ANCESTERY)
     # Evolution
     gen = start_gen
@@ -840,6 +842,7 @@ if __name__ == "__main__":
 
     # box_print(f"GLOBAL_DATA_ANCESTERY", new_line_end=False)
     # print_ancestery(GLOBAL_DATA_ANCESTERY)
+    
     # Apply crossover on the offspring
     box_print("Mating", print_bbox_len=60, new_line_end=False)
     for child1, child2 in zip(offspring[::2], offspring[1::2]):

@@ -21,11 +21,15 @@ if MACOS:
 else:
 	DEVICE = 'cuda'
 	# DEVICE = 'cpu'
-#LLM_MODEL = 'mixtral'
-#LLM_MODEL = 'llama3'
 
-LLM_MODEL = 'qwen'
-#LLM_MODEL = 'gemma2'
+
+# LLM CONFIGURATION SECTION
+LLM_QWEN = 'qwen'
+LLM_MIXTRAL = 'mixtral'
+LLM_LLAMA3 = 'llama3'
+LLM_GEMMA2 = 'gemma2'
+
+MAX_ISLANDS = 3
 
 # SEED_PACKAGE_DIR = "./sota/ExquisiteNetV2/divine_seed_module"
 
