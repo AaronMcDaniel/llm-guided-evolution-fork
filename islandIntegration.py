@@ -658,7 +658,7 @@ def customCrossover(ind1, ind2):
     return offspring1, offspring2
 
 
-def customMutation(individual, indpb, temp_min=0.02, temp_max=0.35):
+def customMutation(individual, indpb, llm_model, temp_min=0.02, temp_max=0.35, hf=False):
     """ Custom mutation function that randomly changes the temperature parameter of the individual's task and assigns a new ID.
     Parameters:
     individual (list): The individual to be mutated.
@@ -681,7 +681,7 @@ def customMutation(individual, indpb, temp_min=0.02, temp_max=0.35):
                                               input_filename_x= f'{SOTA_ROOT}/models/network_{old_gene_id}.py',
                                               output_filename = f'{SOTA_ROOT}/models/network_{new_gene_id}.py',
                                               python_file='src/llm_mutation.py', 
-                                              top_p=0.1, temperature=temperature)
+                                              top_p=0.1, llm_model=llm_model, temperature=temperature, hugging_face=hf)
     
     # Update the individual with the new gene ID
     # individual[0] = new_gene_id
@@ -790,6 +790,7 @@ if __name__ == "__main__":
     # Add arguments
     parser.add_argument('checkpoints', type=str, help='Save Dir')
     parser.add_argument('--llm', type=str, help='Which LLM to use', default=LLM_MIXTRAL)
+    parser.add_argument('--hf', type=bool, help='Using Hugging Face Models', default=False)
     # Parse the arguments
     args = parser.parse_args()
     print(DNA_TXT)
@@ -865,7 +866,7 @@ if __name__ == "__main__":
     box_print("Mutating", print_bbox_len=60, new_line_end=False)
     for mutant in offspring:
         if random.random() < mutation_probability:
-            toolbox.mutate(mutant)
+            toolbox.mutate(mutant, curr_llm, hf=args.hf)
             del mutant.fitness.values
             
     box_print(f"GLOBAL_DATA_ANCESTERY", new_line_end=False)
@@ -909,7 +910,7 @@ if __name__ == "__main__":
     save_checkpoint(gen, folder_name=args.checkpoints)
     LINKED_GENES = {}
     # mutate x prompts
-    mutate_prompts()
+    mutate_prompts(curr_llm, hugging_face=args.hf)
         
     print("-- End of Evolution --")
     best_ind = tools.selBest(population, 1)[0]

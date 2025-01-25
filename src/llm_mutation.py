@@ -13,7 +13,7 @@ from llm_utils import (split_file, submit_mixtral, submit_mixtral_hf,
 
 
 def augment_network(input_filename='network.py', output_filename='network_x.py', template_txt=None,
-                    top_p=0.15, temperature=0.1, apply_quality_control=False, hugging_face=False):
+                    top_p=0.15, llm_model='mixtral', temperature=0.1, apply_quality_control=False, hugging_face=False):
     
     print(f'Loading {input_filename} code')
     parts = split_file(input_filename)
@@ -29,7 +29,7 @@ def augment_network(input_filename='network.py', output_filename='network_x.py',
     # add code to be augmented 
     txt2llm = template_txt.format(code2llm.strip())
     code_from_llm = generate_augmented_code(txt2llm, augment_idx-1, apply_quality_control,
-                                            top_p, temperature, hugging_face=hugging_face)
+                                            top_p, llm_model, temperature, hugging_face=hugging_face)
     
     if not code_from_llm:
         code_from_llm = txt2llm
@@ -55,6 +55,7 @@ if __name__ == "__main__":
     parser.add_argument('input_filename', type=str, help='Input file name')
     parser.add_argument('output_filename', type=str, help='Output file name')
     parser.add_argument('template_txt', type=str, help='Template txt')
+    parser.add_argument('llm_model', type=str, default=False, help='LLM Model Name')
     parser.add_argument('--top_p', type=float, default=0.15, help='Top P value for text generation')
     parser.add_argument('--temperature', type=float, default=0.1, help='Temperature value for text generation')
     parser.add_argument('--apply_quality_control', type=str2bool, default=False, help='Use LLM QC')
@@ -67,6 +68,7 @@ if __name__ == "__main__":
     augment_network(input_filename=args.input_filename,
                     output_filename=args.output_filename,
                     template_txt=args.template_txt,
+                    llm_model=args.llm_model,
                     top_p=args.top_p, 
                     temperature=args.temperature,
                     apply_quality_control=args.apply_quality_control,

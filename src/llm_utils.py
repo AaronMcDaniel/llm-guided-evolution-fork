@@ -40,25 +40,25 @@ def clean_code_from_llm(code_from_llm):
         #return ""
 
 
-def generate_augmented_code(txt2llm, augment_idx, apply_quality_control, top_p, temperature, hugging_face=False):
+def generate_augmented_code(txt2llm, augment_idx, apply_quality_control, top_p, llm_model, temperature, hugging_face=False):
     """Generates augmented code using Mixtral."""
     box_print("PROMPT TO LLM", print_bbox_len=60, new_line_end=False)
     print(txt2llm, flush=True)
     
     if hugging_face is False:
-        if LLM_MODEL == 'mixtral':
+        if llm_model == 'mixtral':
             llm_code_generator = submit_mixtral
-        elif LLM_MODEL == 'qwen':
+        elif llm_model == 'qwen':
             llm_code_generator = submit_qwen
-        elif LLM_MODEL == 'gemma':
+        elif llm_model == 'gemma':
             llm_code_generator = submit_gemma
         qc_func = llm_code_qc
     else:
-        if LLM_MODEL == 'mixtral':
+        if llm_model == 'mixtral':
             llm_code_generator = submit_mixtral_hf
-        elif LLM_MODEL == 'llama3':
+        elif llm_model == 'llama3':
             llm_code_generator = submit_llama3_hf
-        elif LLM_MODEL == 'gemma2':
+        elif llm_model == 'gemma2':
             llm_code_generator = submit_gemma2_hf
         qc_func = llm_code_qc_hf
     
@@ -343,7 +343,7 @@ def submit_gemma(txt2gemma, max_new_tokens=764, top_p=0.15, temperature=0.1,
     
     
     
-def mutate_prompts(n=5):
+def mutate_prompts(llm_model, n=5, hugging_face=False):
     templates = np.random.choice(glob.glob(f'{ROOT_DIR}/templates/FixedPrompts/*/*.txt'), n)
     for i, template in enumerate(templates):
         path, filename = os.path.split(template)
@@ -352,14 +352,21 @@ def mutate_prompts(n=5):
         prompt_text = prompt_text.split("```")[0].strip()
         prompt = "Can you rephrase this text:\n```\n{}\n```".format(prompt_text)
         temp = np.random.uniform(0.01, 0.4)
-        if LLM_MODEL == 'mixtral':
-            llm_code_generator = submit_mixtral_hf
-        elif LLM_MODEL == 'llama3':
-            llm_code_generator = submit_llama3_hf
-        elif LLM_MODEL == 'gemma2':
-            llm_code_generator = submit_gemma2_hf
-        elif LLM_MODEL == 'gemma2_local':
-            llm_code_generator = submit_gemma2_local
+
+        if hugging_face is False:
+            if llm_model == 'mixtral':
+                llm_code_generator = submit_mixtral
+            elif llm_model == 'qwen':
+                llm_code_generator = submit_qwen
+            elif llm_model == 'gemma':
+                llm_code_generator = submit_gemma
+        else:
+            if llm_model == 'mixtral':
+                llm_code_generator = submit_mixtral_hf
+            elif llm_model == 'llama3':
+                llm_code_generator = submit_llama3_hf
+            elif llm_model == 'gemma2':
+                llm_code_generator = submit_gemma2_hf
         output = llm_code_generator(prompt, temperature=temp).strip()
         if "```" in output:
             output = output.split("```")[0]

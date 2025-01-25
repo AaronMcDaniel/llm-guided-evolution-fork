@@ -152,7 +152,7 @@ export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
 
 
 # Run Python script
-python islandIntegration.py {} --llm {}
+python islandIntegration.py {} --llm {} --hf {}
 """
 
 

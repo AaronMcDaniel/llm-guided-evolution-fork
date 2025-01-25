@@ -117,7 +117,7 @@ if __name__ == "__main__":
             curr_llm = ISLANDS[i]
             checkpoint_path = os.path.join(checkpoints, "island_" + curr_llm)
             
-            job_id = submit_run(island_script, PYTHON_BASH_SCRIPT_TEMPLATE_ISLANDS.format(i, checkpoint_path, curr_llm))
+            job_id = submit_run(island_script, PYTHON_BASH_SCRIPT_TEMPLATE_ISLANDS.format(i, checkpoint_path, curr_llm, HUGGING_FACE_BOOL))
             job_ids.append(job_id)
         
         done = True
