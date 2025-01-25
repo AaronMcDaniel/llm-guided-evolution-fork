@@ -125,7 +125,7 @@ if __name__ == "__main__":
     parser.add_argument('--islands', type=int, help='Number of Islands', default=2)
     # Parse the arguments
     args = parser.parse_args()
-    temp_file = "temptemptemp.sh"
+    temp_file = "src/island_script.sh"
     generations = 10
     checkpoints = args.checkpoints
     num_islands = args.islands
