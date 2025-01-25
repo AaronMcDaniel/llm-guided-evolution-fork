@@ -2,32 +2,7 @@ import os
 import argparse
 import subprocess
 import time
-
-PYTHON_BASH_SCRIPT_TEMPLATE = """#!/bin/bash
-#SBATCH --job-name=LLMTest_Island_{}
-#SBATCH -N1 --ntasks-per-node=4
-#SBATCH --mem-per-gpu=16G
-#SBATCH --time=08:00:00
-#SBATCH -oReport_islands-%j.out
-#SBATCH --gres=gpu:1
-#SBATCH -C intel
-
-cd $SLURM_SUBMIT_DIR
-echo "launching AIsurBL"
-echo "Started on `/bin/hostname`"
-
-module load cuda/12
-module load anaconda3
-
-conda activate llmIntegration #ur local environment
-conda info
-
-export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
-
-
-# Run Python script
-python islandIntegration.py {}
-"""
+from src.cfg.constants import *
 
 def submit_run(tempFile, text):
     with open(tempFile, 'w') as file:
@@ -125,7 +100,7 @@ if __name__ == "__main__":
     parser.add_argument('--islands', type=int, help='Number of Islands', default=2)
     # Parse the arguments
     args = parser.parse_args()
-    temp_file = "src/island_script.sh"
+    island_script= "src/island_temp_script.sh"
     generations = 10
     checkpoints = args.checkpoints
     num_islands = args.islands
@@ -139,9 +114,10 @@ if __name__ == "__main__":
         job_ids = []
         for i in range(num_islands):
             print("Generating Island " + str(i), flush=True)
-            checkpoint_path = os.path.join(checkpoints, "island_" + str(i))
+            curr_llm = ISLANDS[i]
+            checkpoint_path = os.path.join(checkpoints, "island_" + curr_llm)
             
-            job_id = submit_run(temp_file, PYTHON_BASH_SCRIPT_TEMPLATE.format(i, checkpoint_path))
+            job_id = submit_run(island_script, PYTHON_BASH_SCRIPT_TEMPLATE_ISLANDS.format(i, checkpoint_path, curr_llm))
             job_ids.append(job_id)
         
         done = True

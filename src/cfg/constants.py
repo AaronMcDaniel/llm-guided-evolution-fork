@@ -29,7 +29,9 @@ LLM_MIXTRAL = 'mixtral'
 LLM_LLAMA3 = 'llama3'
 LLM_GEMMA2 = 'gemma2'
 
-MAX_ISLANDS = 3
+MAX_ISLANDS = 4
+
+ISLANDS = [LLM_QWEN, LLM_MIXTRAL, LLM_LLAMA3, LLM_GEMMA2]
 
 # SEED_PACKAGE_DIR = "./sota/ExquisiteNetV2/divine_seed_module"
 
@@ -124,6 +126,33 @@ export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
 
 # Run Python script
 {}
+"""
+
+
+PYTHON_BASH_SCRIPT_TEMPLATE_ISLANDS = """#!/bin/bash
+#SBATCH --job-name=LLMTest_Island_{}
+#SBATCH -N1 --ntasks-per-node=4
+#SBATCH --mem-per-gpu=16G
+#SBATCH --time=08:00:00
+#SBATCH -oReport_islands-%j.out
+#SBATCH --gres=gpu:1
+#SBATCH -C intel
+
+cd $SLURM_SUBMIT_DIR
+echo "launching AIsurBL"
+echo "Started on `/bin/hostname`"
+
+module load cuda/12
+module load anaconda3
+
+conda activate llmIntegration #ur local environment
+conda info
+
+export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
+
+
+# Run Python script
+python islandIntegration.py {} --llm {}
 """
 
 

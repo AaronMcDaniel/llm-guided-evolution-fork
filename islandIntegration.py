@@ -789,9 +789,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run Generation')
     # Add arguments
     parser.add_argument('checkpoints', type=str, help='Save Dir')
+    parser.add_argument('--llm', type=str, help='Which LLM to use', default=LLM_MIXTRAL)
     # Parse the arguments
     args = parser.parse_args()
     print(DNA_TXT)
+    
+    curr_llm = args.llm
 
     # Load a checkpoint if available
     checkpoint, start_gen = load_checkpoint(folder_name=args.checkpoints)
