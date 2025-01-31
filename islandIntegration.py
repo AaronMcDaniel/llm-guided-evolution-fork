@@ -101,8 +101,8 @@ def write_bash_script(input_filename_x=f'{SOTA_ROOT}/network.py',
                       input_filename_y=None,
                       output_filename=f'{SOTA_ROOT}/models/network_x.py',
                       python_file='src/llm_mutation.py', 
+                      llm_model = LLM_QWEN,
                       top_p=0.1, temperature=0.2,
-                     
                      ):
     
     def fetch_gene(filepath):
@@ -133,7 +133,7 @@ def write_bash_script(input_filename_x=f'{SOTA_ROOT}/network.py',
             file.write(template_txt)
             
         temp_text = f'{python_file} {input_filename_x} {output_filename} {file_path} --top_p {top_p} --temperature {temperature}'
-        python_runline = f"python {temp_text} --apply_quality_control '{QC_CHECK_BOOL}' --hugging_face {HUGGING_FACE_BOOL}"
+        python_runline = f"python {temp_text} --apply_quality_control '{QC_CHECK_BOOL}' --llm_model {llm_model} --hugging_face {HUGGING_FACE_BOOL}"
         
     elif python_file=='src/llm_crossover.py':
         gene_id_parent2 = fetch_gene(input_filename_y)
@@ -141,11 +141,11 @@ def write_bash_script(input_filename_x=f'{SOTA_ROOT}/network.py',
                                                 mutation_type=None, gene_id_parent2=gene_id_parent2)
         
         temp_text = f"{python_file} {input_filename_x} {input_filename_y} {output_filename} --top_p {top_p} --temperature {temperature}"
-        python_runline = f"python {temp_text} --apply_quality_control '{QC_CHECK_BOOL}' --hugging_face {HUGGING_FACE_BOOL}"
+        python_runline = f"python {temp_text} --apply_quality_control '{QC_CHECK_BOOL}' --llm_model {llm_model} --hugging_face {HUGGING_FACE_BOOL}"
     else:
         raise ValueError("Invalid python_file argument")
 
-    bash_script_content = LLM_BASH_SCRIPT_TEMPLATE.format(python_runline)
+    bash_script_content = LLM_BASH_SCRIPT_TEMPLATE.format(LLM_GPU, python_runline)
     return bash_script_content
 
 def create_bash_file(file_path, **kwargs):
@@ -668,6 +668,8 @@ def customMutation(individual, indpb, llm_model, temp_min=0.02, temp_max=0.35, h
     """
     # Check if mutation occurs (based on the mutation probability)
     # if random.random() < indpb: # TODO: connect this to temp
+
+
     global DELAYED_CHECK
     out_dir = str(GENERATION)
     old_gene_id = individual[0]
@@ -796,6 +798,9 @@ if __name__ == "__main__":
     print(DNA_TXT)
     
     curr_llm = args.llm
+    if not curr_llm or curr_llm not in ISLAND_LLMS:
+        print("Error in Island Generation: No LLM specified. Exiting script")
+        exit(1)
 
     # Load a checkpoint if available
     checkpoint, start_gen = load_checkpoint(folder_name=args.checkpoints)

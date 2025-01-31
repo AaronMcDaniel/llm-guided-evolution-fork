@@ -97,24 +97,24 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run Generation')
     # Add arguments
     parser.add_argument('checkpoints', type=str, help='Save Dir')
-    parser.add_argument('--islands', type=int, help='Number of Islands', default=2)
+    parser.add_argument('--num_islands', type=int, help='Number of Islands', default=2)
     # Parse the arguments
     args = parser.parse_args()
     island_script= "src/island_temp_script.sh"
     generations = 10
     checkpoints = args.checkpoints
-    num_islands = args.islands
+    num_islands = args.num_islands
 
-    if num_islands > MAX_ISLANDS:
+    if num_islands >= MAX_ISLANDS:
         print("Number of islands exceeds maximum allowed: " + str(MAX_ISLANDS))
         exit(1)
     
-    for gen in range(generations) :
+    for gen in range(generations):
         print("Starting generation " + str(gen), flush=True)
         job_ids = []
         for i in range(num_islands):
             print("Generating Island " + str(i), flush=True)
-            curr_llm = ISLANDS[i]
+            curr_llm = ISLAND_LLMS[i]
             checkpoint_path = os.path.join(checkpoints, "island_" + curr_llm)
             
             job_id = submit_run(island_script, PYTHON_BASH_SCRIPT_TEMPLATE_ISLANDS.format(i, checkpoint_path, curr_llm, HUGGING_FACE_BOOL))

@@ -5,7 +5,7 @@ import numpy as np
 ROOT_DIR = "/home/hice1/jwarren315/scratch/llm-island-migration/"
 
 # DATA_PATH absolute or relative to ExquisiteNetV2
-DATA_PATH = "/storage/ice1/0/1/gmiao8/llm-island-migration/cifar10"
+DATA_PATH = "/storage/ice1/5/6/jwarren315/llm-island-migration/cifar10"
 SOTA_ROOT = os.path.join(ROOT_DIR, 'sota/ExquisiteNetV2')
 SEED_NETWORK = os.path.join(SOTA_ROOT, "network.py")
 LOCAL = False
@@ -24,14 +24,14 @@ else:
 
 
 # LLM CONFIGURATION SECTION
-LLM_QWEN = 'qwen'
+LLM_QWEN = 'qwen25'
 LLM_MIXTRAL = 'mixtral'
 LLM_LLAMA3 = 'llama3'
 LLM_GEMMA2 = 'gemma2'
 
-MAX_ISLANDS = 4
 
-ISLANDS = [LLM_QWEN, LLM_MIXTRAL, LLM_LLAMA3, LLM_GEMMA2]
+ISLAND_LLMS = [LLM_QWEN, LLM_MIXTRAL, LLM_LLAMA3, LLM_GEMMA2]
+MAX_ISLANDS = len(ISLAND_LLMS)
 
 # SEED_PACKAGE_DIR = "./sota/ExquisiteNetV2/divine_seed_module"
 
@@ -72,7 +72,7 @@ PYTHON_BASH_SCRIPT_TEMPLATE = """#!/bin/bash
 #SBATCH --gres=gpu:1
 
 #SBATCH -G 1
-#SBATCH -C "A100-80GB|H100"
+#SBATCH -C "{}"
 #SBATCH --mem-per-gpu 80G
 #SBATCH --time=05:00:00
 #SBATCH -c 12
@@ -92,7 +92,7 @@ conda activate llmIslandsEnv
 
 # Set the TOKENIZERS_PARALLELISM environment variable if needed
 # export TOKENIZERS_PARALLELISM=false
-export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
+export HF_HOME=/storage/ice1/5/6/jwarren315/.cache/huggingface
 
 # Run Python script
 {}
@@ -122,7 +122,7 @@ conda activate llmIslandsEnv
 
 # Set the TOKENIZERS_PARALLELISM environment variable if needed
 # export TOKENIZERS_PARALLELISM=false
-export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
+export HF_HOME=/storage/ice1/5/6/jwarren315/.cache/huggingface
 
 # Run Python script
 {}
@@ -130,7 +130,7 @@ export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
 
 
 PYTHON_BASH_SCRIPT_TEMPLATE_ISLANDS = """#!/bin/bash
-#SBATCH --job-name=LLMTest_Island_{}
+#SBATCH --job-name=LLM_Island_{}
 #SBATCH -N1 --ntasks-per-node=4
 #SBATCH --mem-per-gpu=16G
 #SBATCH --time=08:00:00
@@ -148,7 +148,7 @@ module load anaconda3
 conda activate llmIslandsEnv
 conda info
 
-export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
+export HF_HOME=/storage/ice1/5/6/jwarren315/.cache/huggingface
 
 
 # Run Python script

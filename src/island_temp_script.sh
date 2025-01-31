@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=LLMTest_Island_2
+#SBATCH --job-name=LLM_Island_0
 #SBATCH -N1 --ntasks-per-node=4
 #SBATCH --mem-per-gpu=16G
 #SBATCH --time=08:00:00
@@ -14,11 +14,11 @@ echo "Started on `/bin/hostname`"
 module load cuda/12
 module load anaconda3
 
-conda activate llmIntegration #ur local environment
+conda activate llmIslandsEnv
 conda info
 
-export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
+export HF_HOME=/storage/ice1/5/6/jwarren315/.cache/huggingface
 
 
 # Run Python script
-python islandIntegration.py checkpoints/island_2
+python islandIntegration.py first_test/island_qwen2.5 --llm qwen2.5 --hf False
