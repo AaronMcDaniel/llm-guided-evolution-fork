@@ -145,7 +145,7 @@ echo "Started on `/bin/hostname`"
 module load cuda/12
 module load anaconda3
 
-conda activate llmIntegration #ur local environment
+conda activate llmIslandsEnv
 conda info
 
 export HF_HOME=/storage/ice1/0/1/gmiao8/.cache/huggingface
