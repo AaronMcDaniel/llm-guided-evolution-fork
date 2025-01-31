@@ -46,20 +46,26 @@ def generate_augmented_code(txt2llm, augment_idx, apply_quality_control, top_p, 
     print(txt2llm, flush=True)
     
     if hugging_face is False:
-        if llm_model == 'mixtral':
+        if llm_model == LLM_MIXTRAL:
             llm_code_generator = submit_mixtral
-        elif llm_model == 'qwen':
+        elif llm_model == LLM_QWEN:
             llm_code_generator = submit_qwen
-        elif llm_model == 'gemma':
+        elif llm_model == LLM_GEMMA2:
             llm_code_generator = submit_gemma
+        else:
+            print("NO LLM SPECIFIED: USING QWEN2.5")
+            llm_code_generator = submit_qwen
         qc_func = llm_code_qc
     else:
-        if llm_model == 'mixtral':
+        if llm_model == LLM_MIXTRAL:
             llm_code_generator = submit_mixtral_hf
-        elif llm_model == 'llama3':
+        elif llm_model == LLM_LLAMA3:
             llm_code_generator = submit_llama3_hf
-        elif llm_model == 'gemma2':
+        elif llm_model == LLM_GEMMA2:
             llm_code_generator = submit_gemma2_hf
+        else:
+            print("NO LLM SPECIFIED: USING HF MIXTRAL")
+            llm_code_generator = submit_mixtral_hf
         qc_func = llm_code_qc_hf
     
     if apply_quality_control:

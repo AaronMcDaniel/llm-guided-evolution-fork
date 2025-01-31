@@ -13,7 +13,7 @@ from llm_utils import (split_file, submit_mixtral, submit_mixtral_hf,
 
 
 def augment_network(input_filename='network.py', output_filename='network_x.py', template_txt=None,
-                    top_p=0.15, llm_model='mixtral', temperature=0.1, apply_quality_control=False, hugging_face=False):
+                    top_p=0.15, llm_model=LLM_QWEN, temperature=0.1, apply_quality_control=False, hugging_face=False):
     
     print(f'Loading {input_filename} code')
     parts = split_file(input_filename)
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     parser.add_argument('input_filename', type=str, help='Input file name')
     parser.add_argument('output_filename', type=str, help='Output file name')
     parser.add_argument('template_txt', type=str, help='Template txt')
-    parser.add_argument('llm_model', type=str, default=False, help='LLM Model Name')
+    parser.add_argument('--llm_model', type=str, default=False, help='LLM Model Name')
     parser.add_argument('--top_p', type=float, default=0.15, help='Top P value for text generation')
     parser.add_argument('--temperature', type=float, default=0.1, help='Temperature value for text generation')
     parser.add_argument('--apply_quality_control', type=str2bool, default=False, help='Use LLM QC')

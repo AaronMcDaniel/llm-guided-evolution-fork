@@ -21,4 +21,4 @@ export HF_HOME=/storage/ice1/5/6/jwarren315/.cache/huggingface
 
 
 # Run Python script
-python islandIntegration.py first_test/island_qwen2.5 --llm qwen2.5 --hf False
+python islandIntegration.py first_test/island_qwen25 --llm qwen25 --hf False
