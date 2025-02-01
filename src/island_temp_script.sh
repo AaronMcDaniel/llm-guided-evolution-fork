@@ -17,7 +17,7 @@ module load anaconda3
 conda activate llmIslandsEnv
 conda info
 
-export HF_HOME=/storage/ice1/5/6/jwarren315/.cache/huggingface
+export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/
 
 
 # Run Python script

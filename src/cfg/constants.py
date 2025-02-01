@@ -92,7 +92,7 @@ conda activate llmIslandsEnv
 
 # Set the TOKENIZERS_PARALLELISM environment variable if needed
 # export TOKENIZERS_PARALLELISM=false
-export HF_HOME=/storage/ice1/5/6/jwarren315/.cache/huggingface
+export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/huggingface
 
 # Run Python script
 {}
@@ -122,7 +122,7 @@ conda activate llmIslandsEnv
 
 # Set the TOKENIZERS_PARALLELISM environment variable if needed
 # export TOKENIZERS_PARALLELISM=false
-export HF_HOME=/storage/ice1/5/6/jwarren315/.cache/huggingface
+export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/huggingface
 
 # Run Python script
 {}
@@ -148,7 +148,7 @@ module load anaconda3
 conda activate llmIslandsEnv
 conda info
 
-export HF_HOME=/storage/ice1/5/6/jwarren315/.cache/huggingface
+export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/huggingface
 
 
 # Run Python script
