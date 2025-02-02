@@ -305,7 +305,7 @@ def submit_run(gene_id):
 
         # python_runline = f'python {train_file} -bs 216 -epoch 2 -network "models.network_{gene_id}" {tmp}'
         python_runline = f'python {train_file} -bs 216 -network "models.network_{gene_id}" {tmp}'
-        bash_script_content = PYTHON_BASH_SCRIPT_TEMPLATE.format(python_runline)
+        bash_script_content = PYTHON_BASH_SCRIPT_TEMPLATE.format(LLM_GPU, python_runline)
         return bash_script_content
 
     # This is for subbing the python code
