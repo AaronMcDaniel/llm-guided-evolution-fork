@@ -6,8 +6,7 @@ ROOT_DIR = "/home/hice1/aganesan44/scratch/llm-island-migration/"
 CONDA_ENV = "llmIntegration"
 
 # DATA_PATH absolute or relative to ExquisiteNetV2
-# Get this by path by running "pace-quota in cmd"
-DATA_PATH = "/storage/ice1/6/3/aganesan44/llm-island-migration/cifar10"
+DATA_PATH = os.path.join(ROOT_DIR, 'cifar10')
 SOTA_ROOT = os.path.join(ROOT_DIR, 'sota/ExquisiteNetV2')
 SEED_NETWORK = os.path.join(SOTA_ROOT, "network.py")
 LOCAL = False
@@ -71,7 +70,6 @@ LLM_GPU = 'A100-80GB|H100'
 PYTHON_BASH_SCRIPT_TEMPLATE = """#!/bin/bash
 #SBATCH --job-name=evaluateGene
 #SBATCH --time=08:00:00
-#SBATCH --gres=gpu:1
 
 #SBATCH -G 1
 #SBATCH -C "{}"
@@ -91,10 +89,11 @@ module load anaconda3
 conda activate {}
 
 # conda info
-
 # Set the TOKENIZERS_PARALLELISM environment variable if needed
 # export TOKENIZERS_PARALLELISM=false
+
 export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/huggingface
+export MKL_THREADING_LAYER=GNU
 
 # Run Python script
 {}

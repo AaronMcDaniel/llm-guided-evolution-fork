@@ -17,7 +17,7 @@ module load anaconda3
 conda activate llmIntegration
 conda info
 
-export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/huggingface
+export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/
 
 
 # Run Python script
