@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=LLM_Island_0
+#SBATCH --job-name=LLM_Island_qwen25
 #SBATCH -N1 --ntasks-per-node=4
 #SBATCH --mem-per-gpu=16G
 #SBATCH --time=08:00:00
@@ -14,10 +14,10 @@ echo "Started on `/bin/hostname`"
 module load cuda/12
 module load anaconda3
 
-conda activate llmIslandsEnv
+conda activate llmIntegration
 conda info
 
-export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/
+export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/huggingface
 
 
 # Run Python script

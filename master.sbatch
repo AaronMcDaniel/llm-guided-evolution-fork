@@ -14,10 +14,10 @@ echo "Started on `/bin/hostname`"
 module load cuda/12
 module load anaconda3
 
-conda activate llmIslandsEnv
+conda activate llmIntegration
 conda info
 
 export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/huggingface
 
-cd /home/hice1/jwarren315/scratch/llm-island-migration
+cd /home/hice1/aganesan44/scratch/llm-island-migration
 python master.py first_test --num_islands 1
