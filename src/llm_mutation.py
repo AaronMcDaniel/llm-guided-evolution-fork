@@ -23,9 +23,11 @@ def augment_network(input_filename='network.py', output_filename='network_x.py',
     # prompt_templates = glob.glob(f'{ROOT_DIR}/templates/FixedPrompts/*/*.txt')
     # template_path = np.random.choice(prompt_templates)
     # template_path = f'{ROOT_DIR}/templates/{fname}'
-    fname = template_txt
+
+    fname = os.path.join(ROOT_DIR, template_txt)
     with open(fname, 'r') as file:
         template_txt = file.read()
+    
     # add code to be augmented 
     txt2llm = template_txt.format(code2llm.strip())
     code_from_llm = generate_augmented_code(txt2llm, augment_idx-1, apply_quality_control,
@@ -63,6 +65,7 @@ if __name__ == "__main__":
 
     # Parse the arguments
     args = parser.parse_args()
+    
 
     # Call the function with the parsed arguments
     augment_network(input_filename=args.input_filename,

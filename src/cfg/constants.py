@@ -103,19 +103,17 @@ export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/huggingface
 LLM_BASH_SCRIPT_TEMPLATE = """#!/bin/bash
 #SBATCH --job-name=llm_oper
 #SBATCH --time=08:00:00
-#SBATCH --gres=gpu:1
 
-#SBATCH -G 1
+
+#SBATCH -G 2 
 #SBATCH -C "{}"
 #SBATCH --mem-per-gpu 80G
-#SBATCH -c 12
+#SBATCH -c 24
 #SBATCH --time=05:00:00
 
 echo "Launching AIsurBL"
 hostname
-# Load GCC version 9.2.0
-# module load gcc/13.2.0
-# module load cuda/11.8
+
 module load cuda/12
 module load anaconda3
 # Activate Conda environment
@@ -151,7 +149,6 @@ conda activate {}
 conda info
 
 export HF_HOME=/storage/ice-shared/vip-vvk/llm_storage/huggingface
-
 
 # Run Python script
 python islandIntegration.py {} --llm {} --hf {}
