@@ -585,8 +585,8 @@ def delayed_mutate_check(offspring):
          
     
 # Custom crossover function
-def customCrossover(ind1, ind2):
-    def combine_elements(ind1, ind2, temp_min=0.05, temp_max=0.1):
+def customCrossover(ind1, ind2, llm_model):
+    def combine_elements(ind1, ind2, llm_model, temp_min=0.05, temp_max=0.1):
         """
         Combine elements of two individuals to create a new individual.
         Parameters:
@@ -611,7 +611,7 @@ def customCrossover(ind1, ind2):
                                           input_filename_y=f'{SOTA_ROOT}/models/network_{gene_id_2}.py',
                                           output_filename=f'{SOTA_ROOT}/models/network_{new_gene_id}.py',
                                           python_file='src/llm_crossover.py', 
-                                          top_p=0.1, temperature=temperature)
+                                          top_p=0.1, lm_model=llm_model, temperature=temperature)
 
         # Update global data for the new individual
         GLOBAL_DATA[new_gene_id] = {'sub_flag':successful_sub_flag, 'job_id':job_id, 
@@ -636,8 +636,8 @@ def customCrossover(ind1, ind2):
     global GLOBAL_DATA
     global DELAYED_CHECK
     
-    new_gene_id1, failed_process1 = combine_elements(ind1, ind2)
-    new_gene_id2, failed_process2 = combine_elements(ind2, ind1)
+    new_gene_id1, failed_process1 = combine_elements(ind1, ind2, llm_model)
+    new_gene_id2, failed_process2 = combine_elements(ind2, ind1, llm_model)
     
     if DELAYED_CHECK:
         LINKED_GENES[new_gene_id1] = ind1[0]
@@ -797,7 +797,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(DNA_TXT)
     
-    curr_llm = args.llm
+    llm_model = args.llm
     if not curr_llm or curr_llm not in ISLAND_LLMS:
         print("Error in Island Generation: No LLM specified. Exiting script")
         exit(1)
@@ -856,7 +856,7 @@ if __name__ == "__main__":
     box_print("Mating", print_bbox_len=60, new_line_end=False)
     for child1, child2 in zip(offspring[::2], offspring[1::2]):
         if random.random() < crossover_probability:
-            child1, child2 = toolbox.mate(child1, child2)
+            child1, child2 = toolbox.mate(child1, child2, llm_model)
             del child1.fitness.values
             del child2.fitness.values 
             
@@ -871,7 +871,7 @@ if __name__ == "__main__":
     box_print("Mutating", print_bbox_len=60, new_line_end=False)
     for mutant in offspring:
         if random.random() < mutation_probability:
-            toolbox.mutate(mutant, curr_llm, hf=args.hf)
+            toolbox.mutate(mutant, llm_model, hf=args.hf)
             del mutant.fitness.values
             
     box_print(f"GLOBAL_DATA_ANCESTERY", new_line_end=False)

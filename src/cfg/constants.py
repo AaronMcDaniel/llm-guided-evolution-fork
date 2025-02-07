@@ -73,7 +73,7 @@ PYTHON_BASH_SCRIPT_TEMPLATE = """#!/bin/bash
 
 #SBATCH -G 1
 #SBATCH -C "{}"
-#SBATCH --mem-per-gpu 80G
+#SBATCH --mem-per-gpu 32G
 #SBATCH --time=05:00:00
 #SBATCH -c 12
 
