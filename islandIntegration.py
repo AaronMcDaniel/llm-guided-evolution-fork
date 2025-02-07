@@ -798,7 +798,7 @@ if __name__ == "__main__":
     print(DNA_TXT)
     
     llm_model = args.llm
-    if not curr_llm or curr_llm not in ISLAND_LLMS:
+    if not llm_model or llm_model not in ISLAND_LLMS:
         print("Error in Island Generation: No LLM specified. Exiting script")
         exit(1)
 
