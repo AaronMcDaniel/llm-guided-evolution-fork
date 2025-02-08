@@ -36,7 +36,7 @@ def clean_code_from_llm(code_from_llm):
     except (IndexError, AttributeError) as e:
         # Print an error message if the code extraction fails
         print("Runtime Error: No code was generated or the format is incorrect.")
-        return "NO CODE GENERATED\n" + code_from_llm  # Return ERROR
+        return "ERROR"  # Return ERROR
         #return ""
 
 
@@ -71,7 +71,25 @@ def generate_augmented_code(txt2llm, augment_idx, apply_quality_control, top_p, 
     if apply_quality_control:
         base_code = retrieve_base_code(augment_idx)
         code_from_llm, generate_text = llm_code_generator(txt2llm, return_gen=True, top_p=top_p, temperature=temperature)
-        code_from_llm = qc_func(code_from_llm, base_code, generate_text)
+        temp, counter = None, 0 #default to run the quality control
+        while counter < 5 and (not temp or temp != "NC" or temp != "OOT" or temp != "MS"): #counter to deal with stubborn 
+            if temp == "NC": #regenerate based on error
+                prefix = "The code you generated did not contain a code output of the changes you mentioned. Make sure to include the altered code in your output.\n"
+                code_from_llm, generate_text = llm_code_generator(prefix + txt2llm, return_gen=True, top_p=top_p, temperature=temperature)
+            elif temp == "OOT":
+                prefix = "The output you gave was cut short due to a limited number of tokens. Shorten your output to just include the altered code without the explanation.\n"
+                code_from_llm, generate_text = llm_code_generator(prefix + txt2llm, return_gen=True, top_p=top_p, temperature=temperature)
+            elif temp == "MS":
+                prefix = "The code you generated was in multiple segments. When you output your altered code make sure it is in a single, complete code segment including the changes you made.\n"
+                code_from_llm, generate_text = llm_code_generator(prefix + txt2llm, return_gen=True, top_p=top_p, temperature=temperature)
+            elif temp == "ERROR": #another unforseen error
+                code_from_llm, generate_text = llm_code_generator(txt2llm, return_gen=True, top_p=top_p, temperature=temperature) #just retry
+            
+            temp = qc_func(code_from_llm, base_code, generate_text)
+        
+        if temp != "NC" or temp != "OOT" or temp != "MS":
+            return base_code
+
     else:
         code_from_llm = llm_code_generator(txt2llm, top_p=top_p, temperature=temperature)
         box_print("TEXT FROM LLM", print_bbox_len=60, new_line_end=False)
@@ -120,8 +138,23 @@ def llm_code_qc(code_from_llm, base_code, generate_text):
     
     res = generate_text(prompt2llm) # clean txt
     code_from_llm = res[0]["generated_text"]
-    code_from_llm = '\n'.join(code_from_llm.strip().split("```")[1].split('\n')[1:]).strip()
-    return code_from_llm
+
+    error = None
+    temp = code_from_llm.strip().split("```")
+    if len(temp) == 1: #no code generated
+        print("Runtime Error: No code was generated.")
+        error = "NC"
+    if "job done" not in temp[-1].lower(): #ran out of tokens
+        print("Runtime Error: LLM ran out of tokens when creating the individual")
+        error = "OOT"
+    if len(temp) > 3: #code segments instead of full code in form: before ```code ``` after
+        print("Runtime Error: LLM generated code segments when creating the individual")
+        error = "MS"
+
+    out = clean_code_from_llm(code_from_llm)
+    if out == "ERROR":
+        error = "ERROR"
+    return clean_code_from_llm(code_from_llm) if error is None else error #return the error or the cleaned code
 
 
 def llm_code_qc_hf(code_from_llm, base_code, generate_text=None):

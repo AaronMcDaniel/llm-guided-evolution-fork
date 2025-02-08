@@ -611,7 +611,7 @@ def customCrossover(ind1, ind2, llm_model):
                                           input_filename_y=f'{SOTA_ROOT}/models/network_{gene_id_2}.py',
                                           output_filename=f'{SOTA_ROOT}/models/network_{new_gene_id}.py',
                                           python_file='src/llm_crossover.py', 
-                                          top_p=0.1, lm_model=llm_model, temperature=temperature)
+                                          top_p=0.1, llm_model=llm_model, temperature=temperature)
 
         # Update global data for the new individual
         GLOBAL_DATA[new_gene_id] = {'sub_flag':successful_sub_flag, 'job_id':job_id, 
