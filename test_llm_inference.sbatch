@@ -2,7 +2,7 @@
 #SBATCH --job-name=llm_inf_test
 #SBATCH --time=08:00:00
 
-#SBATCH -G 2 
+#SBATCH -G 1
 #SBATCH -C 'A100-80GB|H100'
 #SBATCH --mem-per-gpu 80G
 #SBATCH -c 24

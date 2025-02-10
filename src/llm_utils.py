@@ -311,7 +311,7 @@ def submit_qwen(txt2qwen, max_new_tokens=764, top_p=0.15, temperature=0.1,
     model = transformers.AutoModelForCausalLM.from_pretrained(
         model_id,
         trust_remote_code=True,
-        torch_dtype=float16,
+        torch_dtype=bfloat16,
         device_map='auto'
     )
     model.eval()

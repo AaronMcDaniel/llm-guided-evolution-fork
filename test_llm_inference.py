@@ -15,6 +15,8 @@ import textwrap
 from transformers import AutoTokenizer
 
 MODEL="Qwen/Qwen2.5-72B-Instruct"
+#MODEL="mistralai/Mixtral-8x7B-Instruct-v0.1"
+#MODEL="google/gemma-2-2b-it"
 
 def submit_llm(txt2llm, max_new_tokens=764, top_p=0.15, temperature=0.1, 
                    model_id=MODEL, return_gen=False):
@@ -24,7 +26,7 @@ def submit_llm(txt2llm, max_new_tokens=764, top_p=0.15, temperature=0.1,
     model = transformers.AutoModelForCausalLM.from_pretrained(
         model_id,
         trust_remote_code=True,
-        torch_dtype=float16,
+        torch_dtype=bfloat16,
         device_map='auto'
     )
     model.eval()
@@ -56,6 +58,6 @@ if __name__ == "__main__":
     print("STARTING LLM TEXT GENERATION")
     text2llm = "Write a creative story about a team of college students making a breakthrough in AI."
     print("Input Text: ", text2llm)
-    output_txt, generate_text = submit_llm(text2llm)
+    output_txt = submit_llm(text2llm)
     print("LLM OUTPUT: \n", output_txt)
     

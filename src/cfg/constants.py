@@ -44,7 +44,7 @@ INVALID_FITNESS_MAX = tuple([float(x*np.inf*-1) for x in FITNESS_WEIGHTS])
 # this is just a unique value
 PLACEHOLDER_FITNESS = tuple([int(x*9999999999*-1) for x in FITNESS_WEIGHTS])
 
-NUM_EOT_ELITES = 10
+NUM_EOT_ELITES = 2
 GENERATION = 0
 PROB_QC = 0.0
 PROB_EOT = 0.25
@@ -74,7 +74,6 @@ PYTHON_BASH_SCRIPT_TEMPLATE = """#!/bin/bash
 #SBATCH -G 1
 #SBATCH -C "{}"
 #SBATCH --mem-per-gpu 32G
-#SBATCH --time=05:00:00
 #SBATCH -c 12
 
 
