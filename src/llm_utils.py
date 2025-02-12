@@ -42,6 +42,7 @@ def clean_code_from_llm(code_from_llm):
 
 def generate_augmented_code(txt2llm, augment_idx, apply_quality_control, top_p, llm_model, temperature, hugging_face=False):
     """Generates augmented code using Mixtral."""
+    print("LLM being used: ", llm_model)
     box_print("PROMPT TO LLM", print_bbox_len=60, new_line_end=False)
     print(txt2llm, flush=True)
     
@@ -52,6 +53,8 @@ def generate_augmented_code(txt2llm, augment_idx, apply_quality_control, top_p, 
             llm_code_generator = submit_qwen
         elif llm_model == LLM_GEMMA2:
             llm_code_generator = submit_gemma
+        elif llm_model == LLM_DEEPSEEK:
+            llm_code_generator = submit_deepseek
         else:
             print("NO LLM SPECIFIED: USING QWEN2.5")
             llm_code_generator = submit_qwen
@@ -264,7 +267,6 @@ def submit_llama3_hf(txt2llama, max_new_tokens=1024, top_p=0.15, temperature=0.1
     else:
         return results[0]
 
-
 def submit_mixtral(txt2mixtral, max_new_tokens=764, top_p=0.15, temperature=0.1, 
                    model_id="mistralai/Mixtral-8x7B-Instruct-v0.1", return_gen=False):
     max_new_tokens = np.random.randint(800, 1000)
@@ -305,6 +307,44 @@ def submit_mixtral(txt2mixtral, max_new_tokens=764, top_p=0.15, temperature=0.1,
     
 def submit_qwen(txt2qwen, max_new_tokens=764, top_p=0.15, temperature=0.1, 
                    model_id="Qwen/Qwen2.5-72B-Instruct", return_gen=False):
+    max_new_tokens = np.random.randint(800, 1000)
+    print(f'max_new_tokens: {max_new_tokens}')
+    start_time = time.time()
+    model = transformers.AutoModelForCausalLM.from_pretrained(
+        model_id,
+        trust_remote_code=True,
+        torch_dtype=bfloat16,
+        device_map='auto'
+    )
+    model.eval()
+    print(model.device)
+    tokenizer = transformers.AutoTokenizer.from_pretrained(model_id)
+
+    generate_text = transformers.pipeline(
+        model=model, tokenizer=tokenizer,
+        return_full_text=False,  # if using langchain set True
+        task="text-generation",
+        # we pass model parameters here too
+        temperature=temperature,  # 'randomness' of outputs, 0.0 is the min and 1.0 the max
+        top_p=top_p,  # select from top tokens whose probability add up to 15%
+        top_k=0,  # select from top 0 tokens (because zero, relies on top_p)
+        max_new_tokens=max_new_tokens,  # max number of tokens to generate in the output
+        repetition_penalty=1.1,  # if output begins repeating increase
+        do_sample=True,
+    )
+
+    res = generate_text(txt2qwen)
+    output_txt = res[0]["generated_text"]
+    box_print("LLM OUTPUT", print_bbox_len=60, new_line_end=False)
+    print(output_txt)
+    box_print(f'time to load in seconds: {round(time.time()-start_time)}', print_bbox_len=120, new_line_end=False)   
+    if return_gen is False:
+        return output_txt
+    else:
+        return output_txt, generate_text
+    
+def submit_deepseek(txt2qwen, max_new_tokens=764, top_p=0.15, temperature=0.1, 
+                   model_id="deepseek-ai/DeepSeek-R1-Distill-Llama-8B", return_gen=False):
     max_new_tokens = np.random.randint(800, 1000)
     print(f'max_new_tokens: {max_new_tokens}')
     start_time = time.time()

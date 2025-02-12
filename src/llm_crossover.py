@@ -9,7 +9,7 @@ from llm_utils import (split_file, submit_mixtral, submit_mixtral_hf,
 
 
 def augment_network(input_filename_x, input_filename_y, output_filename,
-                    top_p=0.15, llm_model=QWEN, temperature=0.1, apply_quality_control=False,
+                    top_p=0.15, llm_model=LLM_QWEN, temperature=0.1, apply_quality_control=False,
                     hugging_face=False):
     """Augment Python Network Script."""
     # Split the input files
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                     input_filename_y=args.input_filename_y,
                     output_filename=args.output_filename,
                     top_p=args.top_p, 
-                    llm_model=llm_model,
+                    llm_model=args.llm_model,
                     temperature=args.temperature,
                     apply_quality_control=args.apply_quality_control,
                     hugging_face=args.hugging_face,

@@ -658,7 +658,7 @@ def customCrossover(ind1, ind2, llm_model):
     return offspring1, offspring2
 
 
-def customMutation(individual, indpb, llm_model, temp_min=0.02, temp_max=0.35, hf=False):
+def customMutation(individual, llm_model, indpb, temp_min=0.02, temp_max=0.35, hf=False):
     """ Custom mutation function that randomly changes the temperature parameter of the individual's task and assigns a new ID.
     Parameters:
     individual (list): The individual to be mutated.
@@ -856,7 +856,7 @@ if __name__ == "__main__":
     box_print("Mating", print_bbox_len=60, new_line_end=False)
     for child1, child2 in zip(offspring[::2], offspring[1::2]):
         if random.random() < crossover_probability:
-            child1, child2 = toolbox.mate(child1, child2, llm_model)
+            child1, child2 = toolbox.mate(child1, child2, llm_model=llm_model)
             del child1.fitness.values
             del child2.fitness.values 
             
@@ -871,7 +871,7 @@ if __name__ == "__main__":
     box_print("Mutating", print_bbox_len=60, new_line_end=False)
     for mutant in offspring:
         if random.random() < mutation_probability:
-            toolbox.mutate(mutant, llm_model, hf=args.hf)
+            toolbox.mutate(individual=mutant, llm_model=llm_model, hf=args.hf)
             del mutant.fitness.values
             
     box_print(f"GLOBAL_DATA_ANCESTERY", new_line_end=False)
