@@ -13,7 +13,7 @@ module load cuda/12
 export CUDA_VISIBLE_DEVICES=0
 
 module load anaconda3
-conda activate llmIslandsEnv
+conda activate llmIntegration
 conda info
 
 python run_improved.py first_test
