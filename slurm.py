@@ -4,7 +4,6 @@ import yaml
 from src.cfg import constants
 
 def replace_script_configuration(file_path, new_config):
-        
     with open(file_path, 'w') as f:
         f.write(new_config if new_config.endswith('\n') else new_config + '\n')
 
@@ -15,22 +14,23 @@ def save_to_yaml(llm, python, gpu, local_llm_server, file_path=constants.SLURM_C
         with open(f'{file_path}/slurm_config.yaml', 'w') as f:
                 yaml.dump(yaml_data, f, indent=4)
 
-if __name__ == "__main__":
-
+def main():
     configuration_path = f'{constants.SLURM_CONFIG_DIR}{constants.CLUSTER}.txt'
 
     with open(configuration_path, 'r') as file:
 
         content = [item.strip() for item in file.readlines()]
 
-        indices = [index for index, value in enumerate(content) if value == "------"]
+        indices = [index for index, value in enumerate(content) if value.startswith("------")]
 
         runsh_config_lines = "\n".join(content[indices[0]+1:indices[1]])
 
-        run_sh = f"""echo "launching LLM Guided Evolution"
+        run_sh = f"""
+echo "launching LLM Guided Evolution"
 hostname
 module load cuda
 module load anaconda3
+module load uv
 export CUDA_VISIBLE_DEVICES=0
 export MKL_THREADING_LAYER=GNU 
 export SERVER_HOSTNAME=$(hostname)
@@ -44,6 +44,7 @@ uv run python run_improved.py point_transformers_test
 echo "Launching AIsurBL"
 hostname
 module load gcc/13.2.0
+module load uv
 source ~/.bashrc
 # Set the TOKENIZERS_PARALLELISM environment variable if needed
 export TOKENIZERS_PARALLELISM=false
@@ -60,6 +61,7 @@ hostname
 # module load gcc/13.2.0
 module load cuda
 module load anaconda3
+module load uv
 # Activate Virtual environment
 export LD_LIBRARY_PATH=~/.conda/envs/llm_guided_env/lib/python3.12/site-packages/nvidia/nvjitlink/lib:$LD_LIBRARY_PATH
 # Set the TOKENIZERS_PARALLELISM environment variable if needed
@@ -105,3 +107,8 @@ uvicorn server:app --host $SERVER_HOSTNAME --port 8000 --workers 1 --no-access-l
         replace_script_configuration("server.sh", local_llm_server_config + local_llm_server)
 
         save_to_yaml(llm_script, python_script, llm_gpu, local_llm_server)
+
+if __name__ == "__main__":
+    main()
+
+    

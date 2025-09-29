@@ -16,6 +16,7 @@ from src.utils.print_utils import print_population, print_scores, box_print, pri
 from src.llm_utils import split_file, retrieve_base_code, mutate_prompts
 from src.cfg.constants import *
 from src.cfg import constants
+from slurm import main as slurm_main
 
 def print_ancestry(data):
     for gene in data.keys():
@@ -836,6 +837,10 @@ GLOBAL_DATA_ANCESTRY = {}
 if __name__ == "__main__":
     # make output directory
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    # make slurm config
+    slurm_main()
+
 
     # Set Cluter Configurations
     parser = argparse.ArgumentParser(description='Run Generation')

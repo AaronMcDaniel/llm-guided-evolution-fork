@@ -9,13 +9,14 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 DATA_PATH = os.path.join(ROOT_DIR, "data/titanic")
 SOTA_ROOT = os.path.join(ROOT_DIR, 'sota/Titanic')
 SEED_NETWORK = os.path.join(SOTA_ROOT, 'models/Menghao/model.py')
-MODEL = "model"
+MODEL = 'model'
+OUTPUT_DIR = 'output'  # path for GA output
 # Path to local LLM model path used by server.py for LLM operations
-MODEL_PATH = "/storage/ice-shared/vip-vvk/llm_storage/mixtral"
+MODEL_PATH = "/storage/ice-shared/vip-vvk/llm_storage/meta-llama"
 VARIANT_DIR = os.path.join(SOTA_ROOT, "models/llmge_models") 
 TRAIN_FILE = os.path.join(SOTA_ROOT, "train_cls.py") 
 
-CLUSTER = "ice-hammer"
+CLUSTER = "pace-ice"
 LLM_MODEL = 'llama3.3'
 ENVIRONMENT_DIR = os.path.join(ROOT_DIR, ".venv")
 SLURM_CONFIG_DIR = os.path.join(ROOT_DIR, "slurm-config/")
@@ -61,7 +62,7 @@ GENERATION = 0
 PROB_QC = 0.0
 PROB_EOT = 0.25
 num_generations = 100 # Number of generations
-start_population_size = 512  # Starting population size
+start_population_size = 400  # Starting population size
 # start_population_size = 144   # Size of the population 124=72
 #population_size = 44 # with cx_prob (0.25) and mute_prob (0.7) you get about %50 successful turnover
 population_size = 256 # with cx_prob (0.25) and mute_prob (0.7) you get about %50 successful turnover

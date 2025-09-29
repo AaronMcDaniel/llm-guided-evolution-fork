@@ -48,7 +48,7 @@ llm-bash-script
 #!/bin/bash
 #SBATCH --job-name=llm_oper
 #SBATCH -t 8:00:00
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:2
 #SBATCH -G 1
 #SBATCH -C {}
 #SBATCH --mem-per-gpu 16G
