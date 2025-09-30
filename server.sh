@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=llm_server
 #SBATCH -t 8:00:00
-#SBATCH --gres=gpu:2
 #SBATCH -G 2
 #SBATCH --mem-per-gpu 16G
 #SBATCH -n 12
