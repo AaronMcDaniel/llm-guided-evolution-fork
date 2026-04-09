@@ -1,0 +1,50 @@
+name: Submit Slurm Job
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  submit-job-to-slurm:
+    runs-on: [self-hosted]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Submit job to Slurm
+        run: |
+          JOB_ID=$(sbatch --parsable slurm-submit-test.sh)
+          echo "JOB_ID=$JOB_ID" >> "$GITHUB_ENV"
+          echo "Submitted Slurm job: $JOB_ID"
+        shell: bash
+
+      - name: Monitor Slurm job status
+        run: |
+          while squeue -j "$JOB_ID" | grep -q "$JOB_ID"; do
+            echo "Job $JOB_ID still running. Waiting 30 seconds..."
+            sleep 30
+          done
+          pace-job-summary "$JOB_ID" || true
+          echo "Job $JOB_ID finished."
+        shell: bash
+
+      - name: Verify job success
+        run: |
+          JOB_STATE=$(sacct -j "$JOB_ID" --format=State --noheader | head -n 1 | xargs)
+          echo "State: $JOB_STATE"
+
+          if [[ "$JOB_STATE" == "COMPLETED" ]]; then
+            echo "Job $JOB_ID completed successfully."
+          else
+            echo "Job $JOB_ID failed with state: $JOB_STATE"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Upload XML report
+        if: always()
+        uses: actions/upload-artifact@v3-node20
+        with:
+          name: junit-report
+          path: tests/results/report.xml
