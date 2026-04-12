@@ -8,7 +8,22 @@
 #SBATCH -C "A100-40GB|A100-80GB|H100|V100-16GB|V100-32GB|RTX6000|A40|L40S"
 #SBATCH -o slurm-%j.out
 #SBATCH -e slurm-%j.err
-#pgrep -f '[/]server\.sh' > /dev/null || ./server.sh
+
+pgrep -f '[/]server\.sh' > /dev/null || bash ./server.sh
+
+if [ ! -f "sota/Titanic/data/train.csv" ]; then
+  (
+    cd sota/Titanic || exit 1
+    uv run ./pull_data.sh
+  )
+fi
+
+if [ ! -f "sota/Titanic/data/processed_train.csv" ]; then
+  (
+    cd sota/Titanic || exit 1
+    uv run preprocess.py
+  )
+fi
 
 set -euo pipefail
 
