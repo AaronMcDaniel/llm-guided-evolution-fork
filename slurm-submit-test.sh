@@ -44,7 +44,6 @@ command -v uv >/dev/null 2>&1 || { echo "uv is not installed or not on PATH"; ex
 # Sync dependencies from pyproject.toml / uv.lock
 uv sync
 
-
 # Run tests inside the uv-managed environment and generate JUnit XML
 uv run pytest tests/test_*.py --junitxml=tests/results/report.xml
 
