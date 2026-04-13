@@ -19,7 +19,8 @@ jobs:
         run: |
           echo "KAGGLE_USERNAME is set"
           python -c "import os; print('KAGGLE_KEY exists:', bool(os.environ.get('KAGGLE_KEY')
-          
+        shell: bash
+        
       - name: Submit job to Slurm
         run: |
           JOB_ID=$(sbatch --parsable slurm-submit-test.sh)
