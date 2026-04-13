@@ -25,12 +25,11 @@ jobs:
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
-        run: |
-          export KAGGLE_KEY="$KAGGLE_KEY"
-          
+        run: |          
           if [ ! -f "sota/Titanic/data/train.csv" ]; then
             (
               cd sota/Titanic || exit 1
+              export KAGGLE_KEY="$KAGGLE_KEY"
               chmod +x pull_data.sh
               uv run ./pull_data.sh
             )
