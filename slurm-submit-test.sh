@@ -11,6 +11,7 @@
 
 # pgrep -f '[/]server\.sh' > /dev/null || bash ./server.sh
 
+
 if [ ! -f "sota/Titanic/data/train.csv" ]; then
   (
     cd sota/Titanic || exit 1
