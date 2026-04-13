@@ -12,6 +12,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check Slurm connectivity
+        run: |
+          set -euo pipefail
+          echo "HOSTNAME=$(hostname)"
+          echo "SLURM_CONF=${SLURM_CONF:-<unset>}"
+          which sbatch
+          scontrol ping
+          sinfo >/dev/null
+        shell: bash
+        
       - name: Prepare Titanic data
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}

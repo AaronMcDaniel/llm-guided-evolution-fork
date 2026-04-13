@@ -11,20 +11,6 @@
 
 # pgrep -f '[/]server\.sh' > /dev/null || bash ./server.sh
 
-if [ ! -f "sota/Titanic/data/train.csv" ]; then
-  (
-    cd sota/Titanic || exit 1
-    uv run ./pull_data.sh
-  )
-fi
-
-if [ ! -f "sota/Titanic/data/processed_train.csv" ]; then
-  (
-    cd sota/Titanic || exit 1
-    uv run preprocess.py
-  )
-fi
-
 set -euo pipefail
 
 echo "==== SLURM JOB START ===="
