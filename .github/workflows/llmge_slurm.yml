@@ -17,8 +17,23 @@ jobs:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
         run: |
-          echo "KAGGLE_USERNAME is set"
-          python -c "import os; print('KAGGLE_KEY exists:', bool(os.environ.get('KAGGLE_KEY')))"
+          mkdir -p ~/.kaggle
+          cat > ~/.kaggle/kaggle.json <<EOF
+          {
+            "username": "${KAGGLE_USERNAME}",
+            "key": "${KAGGLE_KEY}"
+          }
+          EOF
+          chmod 600 ~/.kaggle/kaggle.json
+
+          python - <<'PY'
+          import json, os
+          p = os.path.expanduser("~/.kaggle/kaggle.json")
+          data = json.load(open(p))
+          print("kaggle.json exists:", True)
+          print("username exists:", bool(data.get("username")))
+          print("key exists:", bool(data.get("key")))
+          PY
         shell: bash
 
       - name: Prepare Titanic data
@@ -29,7 +44,6 @@ jobs:
           if [ ! -f "sota/Titanic/data/train.csv" ]; then
             (
               cd sota/Titanic || exit 1
-              export KAGGLE_KEY=$KAGGLE_KEY
               chmod +x pull_data.sh
               uv run ./pull_data.sh
             )
