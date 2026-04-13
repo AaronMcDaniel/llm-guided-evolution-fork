@@ -40,20 +40,19 @@ jobs:
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
-        run: |          
-          if [ ! -f "sota/Titanic/data/train.csv" ]; then
+        run: |         
+          cd sota/Titanic || exit 1 
+          uv run kaggle competitions list -s titanic
+          if [ ! -f "data/train.csv" ]; then
             (
-              cd sota/Titanic || exit 1
               chmod +x pull_data.sh
               uv run ./pull_data.sh
             )
           fi
 
-          if [ ! -f "sota/Titanic/data/processed_train.csv" ]; then
-            (
-              cd sota/Titanic || exit 1
-              uv run python preprocess.py
-            )
+          if [ ! -f "data/processed_train.csv" ]; then
+            uv run python preprocess.py
+            
           fi
         shell: bash
 
