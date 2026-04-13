@@ -11,7 +11,6 @@
 
 # pgrep -f '[/]server\.sh' > /dev/null || bash ./server.sh
 
-
 set -euo pipefail
 
 echo "==== SLURM JOB START ===="
