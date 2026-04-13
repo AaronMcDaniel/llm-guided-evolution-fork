@@ -26,6 +26,7 @@ jobs:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
         run: |
+          export KAGGLE_KEY="$KAGGLE_KEY"
           if [ ! -f "sota/Titanic/data/train.csv" ]; then
             (
               cd sota/Titanic || exit 1
