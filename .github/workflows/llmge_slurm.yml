@@ -12,35 +12,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Kaggle credentials
-        env:
-          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
-          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
-        run: |
-          mkdir -p ~/.kaggle
-          cat > ~/.kaggle/kaggle.json <<EOF
-          {
-            "username": "${KAGGLE_USERNAME}",
-            "key": "${KAGGLE_KEY}"
-          }
-          EOF
-          chmod 600 ~/.kaggle/kaggle.json
-
-          python - <<'PY'
-          import json, os
-          p = os.path.expanduser("~/.kaggle/kaggle.json")
-          data = json.load(open(p))
-          print("kaggle.json exists:", True)
-          print("username exists:", bool(data.get("username")))
-          print("key exists:", bool(data.get("key")))
-          PY
-        shell: bash
-
       - name: Prepare Titanic data
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
-        run: |         
+        run: | 
+          export KAGGLE_API_TOKEN=$KAGGLE_KEY
           cd sota/Titanic || exit 1 
           uv run kaggle competitions list -s titanic
           if [ ! -f "data/train.csv" ]; then
