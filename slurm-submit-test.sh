@@ -11,6 +11,20 @@
 
 # pgrep -f '[/]server\.sh' > /dev/null || bash ./server.sh
 
+if [ ! -f "sota/Titanic/data/train.csv" ]; then
+  (
+    cd sota/Titanic || exit 1
+    uv run ./pull_data.sh
+  )
+fi
+
+if [ ! -f "sota/Titanic/data/processed_train.csv" ]; then
+  (
+    cd sota/Titanic || exit 1
+    uv run preprocess.py
+  )
+fi
+
 set -euo pipefail
 
 echo "==== SLURM JOB START ===="
@@ -29,7 +43,6 @@ command -v uv >/dev/null 2>&1 || { echo "uv is not installed or not on PATH"; ex
 
 # Sync dependencies from pyproject.toml / uv.lock
 uv sync
-
 
 # Run tests inside the uv-managed environment and generate JUnit XML
 uv run pytest tests/test_*.py --junitxml=tests/results/report.xml
