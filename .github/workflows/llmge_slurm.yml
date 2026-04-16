@@ -2,8 +2,9 @@ name: Submit Slurm Job
 
 on:
   push:
-    branches: ["main"]
-
+    branches:
+      - main
+  workflow_dispatch:
 jobs:
   submit-job-to-slurm:
     runs-on: [self-hosted]
