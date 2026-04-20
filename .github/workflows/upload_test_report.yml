@@ -1,0 +1,205 @@
+name: Publish XML report history to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-report:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Replace this with your real command that creates the XML file
+      - name: Generate XML report
+        run: |
+          mkdir -p tests/results
+          if [ ! -f tests/results/report.xml ]; then
+            echo '<?xml version="1.0" encoding="UTF-8"?><report><status>ok</status></report>' > tests/results/report.xml
+          fi
+
+      - name: Collect metadata
+        id: meta
+        shell: bash
+        run: |
+          UTC_TIME="$(date -u +'%Y-%m-%d_%H-%M-%S')"
+          DISPLAY_TIME="$(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          RUN_DIR="runs/${UTC_TIME}_run-${GITHUB_RUN_NUMBER}"
+
+          COMMIT_SHA="$(git rev-parse HEAD)"
+          COMMIT_SHORT_SHA="$(git rev-parse --short HEAD)"
+          COMMIT_TITLE="$(git log -1 --pretty=%s)"
+          COMMIT_MESSAGE="$(git log -1 --pretty=%B)"
+
+          {
+            echo "utc_time=$UTC_TIME"
+            echo "display_time=$DISPLAY_TIME"
+            echo "run_dir=$RUN_DIR"
+            echo "commit_sha=$COMMIT_SHA"
+            echo "commit_short_sha=$COMMIT_SHORT_SHA"
+            echo "commit_title<<EOF"
+            echo "$COMMIT_TITLE"
+            echo "EOF"
+            echo "commit_message<<EOF"
+            echo "$COMMIT_MESSAGE"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+        continue-on-error: true
+
+      - name: Initialize gh-pages if missing
+        shell: bash
+        run: |
+          if [ ! -d gh-pages/.git ]; then
+            rm -rf gh-pages
+            mkdir gh-pages
+            cd gh-pages
+            git init
+            git checkout -b gh-pages
+          fi
+
+      - name: Copy report and build site
+        shell: bash
+        env:
+          DISPLAY_TIME: ${{ steps.meta.outputs.display_time }}
+          RUN_DIR: ${{ steps.meta.outputs.run_dir }}
+          COMMIT_SHA: ${{ steps.meta.outputs.commit_sha }}
+          COMMIT_SHORT_SHA: ${{ steps.meta.outputs.commit_short_sha }}
+          COMMIT_TITLE: ${{ steps.meta.outputs.commit_title }}
+          COMMIT_MESSAGE: ${{ steps.meta.outputs.commit_message }}
+          ACTOR: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_NUMBER: ${{ github.run_number }}
+          SERVER_URL: ${{ github.server_url }}
+        run: |
+          mkdir -p "gh-pages/${RUN_DIR}"
+          cp tests/results/report.xml "gh-pages/${RUN_DIR}/report.xml"
+
+          cat > "gh-pages/${RUN_DIR}/metadata.json" <<EOF
+          {
+            "time": "${DISPLAY_TIME}",
+            "user": "${ACTOR}",
+            "repository": "${REPO}",
+            "run_id": "${RUN_ID}",
+            "run_number": "${RUN_NUMBER}",
+            "commit_sha": "${COMMIT_SHA}",
+            "commit_short_sha": "${COMMIT_SHORT_SHA}",
+            "commit_title": $(python3 -c 'import json,os; print(json.dumps(os.environ["COMMIT_TITLE"]))'),
+            "commit_message": $(python3 -c 'import json,os; print(json.dumps(os.environ["COMMIT_MESSAGE"]))'),
+            "report_path": "${RUN_DIR}/report.xml",
+            "actions_url": "${SERVER_URL}/${REPO}/actions/runs/${RUN_ID}",
+            "commit_url": "${SERVER_URL}/${REPO}/commit/${COMMIT_SHA}"
+          }
+          EOF
+
+          cat > "gh-pages/${RUN_DIR}/index.html" <<EOF
+          <!doctype html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Run ${RUN_NUMBER}</title>
+          </head>
+          <body>
+            <h1>Workflow Run ${RUN_NUMBER}</h1>
+            <p><strong>Time:</strong> ${DISPLAY_TIME}</p>
+            <p><strong>User:</strong> ${ACTOR}</p>
+            <p><strong>Commit SHA:</strong> <a href="${SERVER_URL}/${REPO}/commit/${COMMIT_SHA}">${COMMIT_SHORT_SHA}</a></p>
+            <p><strong>Commit title:</strong> ${COMMIT_TITLE}</p>
+            <p><strong>Commit message:</strong></p>
+            <pre>${COMMIT_MESSAGE}</pre>
+            <p><strong>Workflow run:</strong> <a href="${SERVER_URL}/${REPO}/actions/runs/${RUN_ID}">Open Actions run</a></p>
+            <p><strong>XML report:</strong> <a href="./report.xml">report.xml</a></p>
+            <p><a href="../../index.html">Back to all runs</a></p>
+          </body>
+          </html>
+          EOF
+
+          python3 <<'PY'
+          import os
+          import html
+          from pathlib import Path
+
+          root = Path("gh-pages")
+          runs_dir = root / "runs"
+          runs_dir.mkdir(parents=True, exist_ok=True)
+
+          run_entries = []
+          for run_path in sorted(runs_dir.glob("*"), reverse=True):
+              if run_path.is_dir():
+                  meta = run_path / "metadata.json"
+                  if meta.exists():
+                      import json
+                      data = json.loads(meta.read_text())
+                      run_entries.append(data)
+
+          rows = []
+          for item in run_entries:
+              rows.append(f"""
+              <tr>
+                <td>{html.escape(item["time"])}</td>
+                <td>{html.escape(item["user"])}</td>
+                <td><a href="{html.escape(item["commit_url"])}">{html.escape(item["commit_short_sha"])}</a></td>
+                <td>{html.escape(item["commit_title"])}</td>
+                <td><pre style="white-space:pre-wrap;margin:0">{html.escape(item["commit_message"])}</pre></td>
+                <td><a href="{html.escape(item["actions_url"])}">run {html.escape(str(item["run_number"]))}</a></td>
+                <td><a href="{html.escape(item["report_path"])}">xml</a></td>
+              </tr>
+              """)
+
+          page = f"""<!doctype html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Workflow Report History</title>
+          </head>
+          <body>
+            <h1>Workflow Report History</h1>
+            <p>Total runs stored: {len(run_entries)}</p>
+            <table border="1" cellpadding="6" cellspacing="0">
+              <thead>
+                <tr>
+                  <th>Date / Time</th>
+                  <th>User</th>
+                  <th>Commit</th>
+                  <th>Commit title</th>
+                  <th>Commit message</th>
+                  <th>Actions run</th>
+                  <th>XML report</th>
+                </tr>
+              </thead>
+              <tbody>
+                {''.join(rows)}
+              </tbody>
+            </table>
+          </body>
+          </html>
+          """
+          (root / "index.html").write_text(page, encoding="utf-8")
+          (root / ".nojekyll").write_text("", encoding="utf-8")
+          PY
+
+      - name: Commit and push site history
+        shell: bash
+        run: |
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --cached --quiet && exit 0
+          git commit -m "Add report for run ${GITHUB_RUN_NUMBER}"
+          git pull --rebase origin gh-pages || true
+          git push origin HEAD:gh-pages
