@@ -5,7 +5,7 @@
 #SBATCH -N 1
 #SBATCH --mem-per-gpu 16G
 #SBATCH --gres=gpu:1
-#SBATCH -C "A100-40GB|A100-80GB|H100|V100-16GB|V100-32GB|RTX6000|A40|L40S"
+#SBATCH -C "H100|H200"
 #SBATCH -o slurm-%j.out
 #SBATCH -e slurm-%j.err
 
