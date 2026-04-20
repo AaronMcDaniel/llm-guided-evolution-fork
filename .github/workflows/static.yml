@@ -1,0 +1,70 @@
+name: Publish XML report to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-site:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # Replace this with your real test/report command
+      - name: Generate XML report
+        run: |
+          mkdir -p tests/results
+          echo '<?xml version="1.0" encoding="UTF-8"?><report><status>ok</status></report>' > tests/results/report.xml
+
+      - name: Prepare Pages site
+        run: |
+          rm -rf site
+          mkdir -p site
+
+          cp tests/results/report.xml site/report.xml
+
+          cat > site/index.html <<'EOF'
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <title>CI Reports</title>
+            </head>
+            <body>
+              <h1>CI Reports</h1>
+              <p><a href="./report.xml">Open latest XML report</a></p>
+            </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+  deploy:
+    needs: build-site
+    runs-on: self-hosted
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
