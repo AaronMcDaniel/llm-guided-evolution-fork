@@ -23,7 +23,7 @@ jobs:
       - name: Download artifact from triggering workflow run
         uses: actions/download-artifact@v4
         with:
-          name: slurm-xml-report
+          name: junit-report
           path: downloaded-report
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
