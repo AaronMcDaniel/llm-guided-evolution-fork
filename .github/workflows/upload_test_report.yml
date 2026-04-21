@@ -2,8 +2,8 @@ name: Publish XML report history to GitHub Pages
 
 on:
   workflow_run:
-    workflows: ["Submit Slurm Job"]
-    types: [completed]
+    workflows: [ "Submit Slurm Job" ]
+    types: [ completed ]
 
 permissions:
   contents: write
@@ -41,14 +41,14 @@ jobs:
           echo "$ARTIFACTS_JSON" > artifacts.json
 
           ARTIFACT_ID=$(python3 - <<'PY'
-            import json
-            with open("artifacts.json", "r", encoding="utf-8") as f:
-                data = json.load(f)
-            for a in data.get("artifacts", []):
-                if a.get("name") == "junit-report":
-                    print(a["id"])
-                    break
-            PY
+          import json
+          with open("artifacts.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+          for a in data.get("artifacts", []):
+              if a.get("name") == "junit-report":
+                  print(a["id"])
+                  break
+          PY
           )
 
           if [ -z "${ARTIFACT_ID:-}" ]; then
@@ -69,8 +69,7 @@ jobs:
       - name: Inspect downloaded files
         shell: bash
         run: |
-          ls -R downloaded-report
-          test -f downloaded-report/report.xml
+          ls -R downloaded-report && test -f downloaded-report/report.xml
 
       - name: Collect metadata from triggering run
         id: meta
