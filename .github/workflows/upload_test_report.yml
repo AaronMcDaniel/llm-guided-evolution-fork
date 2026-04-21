@@ -20,12 +20,14 @@ jobs:
           fetch-depth: 0
 
       - name: Download artifact from triggering workflow run
-        uses: actions/download-artifact@v3.0.2
-        with:
-          name: junit-report
-          path: downloaded-report
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p downloaded-report
+          gh run download "${{ github.event.workflow_run.id }}" \
+            -n junit-report \
+            -D downloaded-report
 
       - name: Inspect downloaded files
         shell: bash
