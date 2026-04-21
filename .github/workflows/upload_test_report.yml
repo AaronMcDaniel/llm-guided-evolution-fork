@@ -19,21 +19,52 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install GitHub CLI
-        uses: actions4gh/setup-gh@v1
-
-      - name: Check gh
-        run: gh --version
-
-      - name: Download artifact from triggering workflow run
+      - name: Download artifact from triggering workflow run via REST API
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          API_URL: ${{ github.api_url }}
         run: |
+          set -euo pipefail
+
           mkdir -p downloaded-report
-          gh run download "${{ github.event.workflow_run.id }}" \
-            -n junit-report \
-            -D downloaded-report
+
+          echo "Listing artifacts for run $RUN_ID"
+
+          ARTIFACTS_JSON=$(curl -fsSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$API_URL/repos/$REPO/actions/runs/$RUN_ID/artifacts")
+
+          echo "$ARTIFACTS_JSON" > artifacts.json
+
+          ARTIFACT_ID=$(python3 - <<'PY'
+            import json
+            with open("artifacts.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for a in data.get("artifacts", []):
+                if a.get("name") == "junit-report":
+                    print(a["id"])
+                    break
+            PY
+          )
+
+          if [ -z "${ARTIFACT_ID:-}" ]; then
+            echo "Artifact junit-report not found for run $RUN_ID"
+            exit 1
+          fi
+
+          echo "Found artifact id: $ARTIFACT_ID"
+
+          curl -fL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$API_URL/repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip" \
+            -o downloaded-report/junit-report.zip
+
+          unzip -o downloaded-report/junit-report.zip -d downloaded-report
 
       - name: Inspect downloaded files
         shell: bash
