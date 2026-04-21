@@ -3,6 +3,7 @@ name: Submit Slurm Job
 on:
   push:
     branches: ["main"]
+  workflow_dispatch:
 
 jobs:
   submit-job-to-slurm:
@@ -73,55 +74,55 @@ jobs:
           fi
         shell: bash
 
-      - name: Print test results
-        if: always()
-        run: |
-          python3 - <<'EOF'
-          import xml.etree.ElementTree as ET, sys, os
+      # - name: Print test results
+      #   if: always()
+      #   run: |
+      #     python3 - <<'EOF'
+      #     import xml.etree.ElementTree as ET, sys, os
 
-          report = "tests/results/report.xml"
-          if not os.path.exists(report):
-              print(f"No report found at {report}")
-              sys.exit(0)
+      #     report = "tests/results/report.xml"
+      #     if not os.path.exists(report):
+      #         print(f"No report found at {report}")
+      #         sys.exit(0)
 
-          root = ET.parse(report).getroot()
-          results = {"failed": [], "skipped": [], "passed": 0}
+      #     root = ET.parse(report).getroot()
+      #     results = {"failed": [], "skipped": [], "passed": 0}
 
-          for tc in root.iter("testcase"):
-              name = tc.get("classname", "") + "::" + tc.get("name", "")
-              failure = tc.find("failure")
-              error   = tc.find("error")
-              skipped = tc.find("skipped")
+      #     for tc in root.iter("testcase"):
+      #         name = tc.get("classname", "") + "::" + tc.get("name", "")
+      #         failure = tc.find("failure")
+      #         error   = tc.find("error")
+      #         skipped = tc.find("skipped")
 
-              if failure is not None or error is not None:
-                  node = failure if failure is not None else error
-                  results["failed"].append((name, node))
-              elif skipped is not None:
-                  results["skipped"].append((name, skipped.get("message", "No reason given")))
-              else:
-                  results["passed"] += 1
+      #         if failure is not None or error is not None:
+      #             node = failure if failure is not None else error
+      #             results["failed"].append((name, node))
+      #         elif skipped is not None:
+      #             results["skipped"].append((name, skipped.get("message", "No reason given")))
+      #         else:
+      #             results["passed"] += 1
 
-          print(f"Passed:  {results['passed']}")
-          print(f"Skipped: {len(results['skipped'])}")
-          print(f"Failed:  {len(results['failed'])}\n")
+      #     print(f"Passed:  {results['passed']}")
+      #     print(f"Skipped: {len(results['skipped'])}")
+      #     print(f"Failed:  {len(results['failed'])}\n")
 
-          if results["skipped"]:
-              print("===== Skipped Tests =====")
-              for name, reason in results["skipped"]:
-                  print(f"SKIPPED: {name}")
-                  print(f"  Reason: {reason}")
-              print()
+      #     if results["skipped"]:
+      #         print("===== Skipped Tests =====")
+      #         for name, reason in results["skipped"]:
+      #             print(f"SKIPPED: {name}")
+      #             print(f"  Reason: {reason}")
+      #         print()
 
-          if results["failed"]:
-              print("===== Failed Tests =====")
-              for name, node in results["failed"]:
-                  print(f"FAILED: {name}")
-                  if node.get("message"): print(f"  Message : {node.get('message')}")
-                  if node.text:           print(f"  Detail  :\n{node.text.strip()}")
-                  print()
-              sys.exit(1)
-          EOF
-        shell: bash
+      #     if results["failed"]:
+      #         print("===== Failed Tests =====")
+      #         for name, node in results["failed"]:
+      #             print(f"FAILED: {name}")
+      #             if node.get("message"): print(f"  Message : {node.get('message')}")
+      #             if node.text:           print(f"  Detail  :\n{node.text.strip()}")
+      #             print()
+      #         sys.exit(1)
+      #     EOF
+      #   shell: bash
 
 
       - name: Upload XML report
