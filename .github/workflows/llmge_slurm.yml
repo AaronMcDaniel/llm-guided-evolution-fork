@@ -164,6 +164,78 @@ jobs:
           EOF
         shell: bash
 
+      - name: "Benchmark results - Quality Comparison"
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET, os, sys
+
+          report = "tests/results/report.xml"
+          if not os.path.exists(report):
+              print("No report found."); sys.exit(0)
+
+          root = ET.parse(report).getroot()
+
+          def print_benchmarks(benchmarks, label, id_key="gene_id"):
+              print(f"::group::── {label} ({len(benchmarks)}) ──")
+              print("::endgroup::")
+
+              for entry in benchmarks:
+                  pair      = entry["id"]
+                  skipped   = entry["skipped"]
+                  output    = entry["output"]
+
+                  if skipped is not None:
+                      print(f"::group::SKIPPED: {pair}")
+                      print(f"  Reason: {skipped.get('message', 'No reason given')}")
+                  else:
+                      syntax_line = next((l for l in output.splitlines() if "SYNTAX" in l), None)
+                      eval_line   = next((l for l in output.splitlines() if "EVAL"   in l), None)
+
+                      print(f"::group::{pair}")
+                      if syntax_line: print(f"  {syntax_line.strip()}")
+                      if eval_line:   print(f"  {eval_line.strip()}")
+                      if not syntax_line and not eval_line:
+                          print("  No output captured (check -s flag is set in pytest)")
+
+                  print("::endgroup::")
+
+          # ── Collect mutation benchmarks ───────────────────────────
+          mutation_benchmarks = []
+          for tc in root.iter("testcase"):
+              name = tc.get("name", "")
+              if "mutation" not in name.lower() or "benchmark" not in name.lower():
+                  continue
+              gene_id = name.split("[")[-1].rstrip("]") if "[" in name else name
+              stdout  = tc.find("system-out")
+              mutation_benchmarks.append({
+                  "id":      gene_id,
+                  "skipped": tc.find("skipped"),
+                  "output":  (stdout.text or "").strip() if stdout is not None else ""
+              })
+
+          # ── Collect crossover benchmarks ──────────────────────────
+          crossover_benchmarks = []
+          for tc in root.iter("testcase"):
+              name = tc.get("name", "")
+              if "crossover" not in name.lower() or "benchmark" not in name.lower():
+                  continue
+              pair   = name.split("[")[-1].rstrip("]") if "[" in name else name
+              stdout = tc.find("system-out")
+              crossover_benchmarks.append({
+                  "id":      pair,
+                  "skipped": tc.find("skipped"),
+                  "output":  (stdout.text or "").strip() if stdout is not None else ""
+              })
+
+          # ── Print both sections ───────────────────────────────────
+          print(f"Mutation benchmarks:  {len(mutation_benchmarks)}")
+          print(f"Crossover benchmarks: {len(crossover_benchmarks)}\n")
+
+          print_benchmarks(mutation_benchmarks,  "Mutation Benchmarks")
+          print_benchmarks(crossover_benchmarks, "Crossover Benchmarks")
+          EOF
+        shell: bash
 
       - name: Upload XML report
         if: always()

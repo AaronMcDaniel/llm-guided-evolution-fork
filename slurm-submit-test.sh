@@ -31,7 +31,10 @@ command -v uv >/dev/null 2>&1 || { echo "uv is not installed or not on PATH"; ex
 uv sync
 
 # Run tests inside the uv-managed environment and generate JUnit XML
-uv run pytest tests/test_*.py --junitxml=tests/results/report.xml
+#v run pytest tests/test_*.py --junitxml=tests/results/report.xml
+
+#Added -v and -s for verbose output and to allow print statement from benchmark test to display in xml report
+uv run pytest tests/test_*.py -v -s --junitxml=tests/results/report.xml
 
 echo "==== SLURM JOB END ===="
 date
