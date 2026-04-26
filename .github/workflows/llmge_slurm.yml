@@ -74,55 +74,95 @@ jobs:
           fi
         shell: bash
 
-      # - name: Print test results
-      #   if: always()
-      #   run: |
-      #     python3 - <<'EOF'
-      #     import xml.etree.ElementTree as ET, sys, os
+      - name: "Passed tests"
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET, os, sys
 
-      #     report = "tests/results/report.xml"
-      #     if not os.path.exists(report):
-      #         print(f"No report found at {report}")
-      #         sys.exit(0)
+          report = "tests/results/report.xml"
+          if not os.path.exists(report):
+              print("No report found."); sys.exit(0)
 
-      #     root = ET.parse(report).getroot()
-      #     results = {"failed": [], "skipped": [], "passed": 0}
+          passed = [
+              tc.get("classname", "") + "::" + tc.get("name", "")
+              for tc in ET.parse(report).getroot().iter("testcase")
+              if tc.find("failure") is None and tc.find("error") is None and tc.find("skipped") is None
+          ]
 
-      #     for tc in root.iter("testcase"):
-      #         name = tc.get("classname", "") + "::" + tc.get("name", "")
-      #         failure = tc.find("failure")
-      #         error   = tc.find("error")
-      #         skipped = tc.find("skipped")
+          print(f"Total passed: {len(passed)}\n")
+          for name in passed:
+              print(f"  • {name}")
+          EOF
+        shell: bash
 
-      #         if failure is not None or error is not None:
-      #             node = failure if failure is not None else error
-      #             results["failed"].append((name, node))
-      #         elif skipped is not None:
-      #             results["skipped"].append((name, skipped.get("message", "No reason given")))
-      #         else:
-      #             results["passed"] += 1
+      - name: "Skipped tests"
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET, os, sys
 
-      #     print(f"Passed:  {results['passed']}")
-      #     print(f"Skipped: {len(results['skipped'])}")
-      #     print(f"Failed:  {len(results['failed'])}\n")
+          report = "tests/results/report.xml"
+          if not os.path.exists(report):
+              print("No report found."); sys.exit(0)
 
-      #     if results["skipped"]:
-      #         print("===== Skipped Tests =====")
-      #         for name, reason in results["skipped"]:
-      #             print(f"SKIPPED: {name}")
-      #             print(f"  Reason: {reason}")
-      #         print()
+          skipped = [
+              (tc.get("classname", "") + "::" + tc.get("name", ""),
+               tc.find("skipped").get("message", "No reason given"))
+              for tc in ET.parse(report).getroot().iter("testcase")
+              if tc.find("skipped") is not None
+          ]
 
-      #     if results["failed"]:
-      #         print("===== Failed Tests =====")
-      #         for name, node in results["failed"]:
-      #             print(f"FAILED: {name}")
-      #             if node.get("message"): print(f"  Message : {node.get('message')}")
-      #             if node.text:           print(f"  Detail  :\n{node.text.strip()}")
-      #             print()
-      #         sys.exit(1)
-      #     EOF
-      #   shell: bash
+          print(f"Total skipped: {len(skipped)}\n")
+          for name, reason in skipped:
+              print(f"  • {name}")
+              print(f"    Reason: {reason}")
+          EOF
+        shell: bash
+
+      - name: "Failed tests"
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET, os, sys
+
+          report = "tests/results/report.xml"
+          if not os.path.exists(report):
+              print("No report found."); sys.exit(0)
+
+          failed = []
+          for tc in ET.parse(report).getroot().iter("testcase"):
+              name    = tc.get("classname", "") + "::" + tc.get("name", "")
+              failure = tc.find("failure")
+              error   = tc.find("error")
+              if failure is not None or error is not None:
+                  node = failure if failure is not None else error
+                  failed.append((name, node.get("message", ""), (node.text or "").strip()))
+
+          print(f"Total failed: {len(failed)}\n")
+
+          def get_label(name):
+              n = name.lower()
+              if "mutat" in n:  return "✗ FAILED MUTATED INDIVIDUAL"
+              if "cross" in n:  return "✗ FAILED CROSSED INDIVIDUAL"
+              return                    "✗ FAILED INDIVIDUAL"
+
+          for name, message, detail in failed:
+              label = get_label(name)
+              print(f"::group::{label}: {name.split('::')[-1]}")
+              print(f"  Test    : {name}")
+              if message:
+                  print(f"  Message : {message}")
+              if detail:
+                  print(f"  Detail  :")
+                  for line in detail.splitlines():
+                      print(f"    {line}")
+              print("::endgroup::")
+
+          if failed:
+              sys.exit(1)
+          EOF
+        shell: bash
 
 
       - name: Upload XML report
