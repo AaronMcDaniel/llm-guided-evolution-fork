@@ -34,7 +34,7 @@ uv sync
 #v run pytest tests/test_*.py --junitxml=tests/results/report.xml
 
 #Added -v and -s for verbose output and to allow print statement from benchmark test to display in xml report
-uv run pytest tests/test_*.py -v -s --junitxml=tests/results/report.xml
+uv run pytest tests/test_*.py -v --capture=tee-sys --junitxml=tests/results/report.xml
 
 echo "==== SLURM JOB END ===="
 date
