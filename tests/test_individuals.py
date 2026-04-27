@@ -143,8 +143,7 @@ def test_mutation_produces_valid_model(gene_id, tmp_path):
         ['uv', 'run', 'python', 'src/llm_mutation.py',
          parent, child, prompt,
          '--top_p', '0.1', '--temperature', '0.17',
-         '--apply_quality_control', 'False',
-         '--inference_submission', 'True'],
+         '--apply_quality_control', 'False'],
         cwd=ROOT, capture_output=True, text=True, timeout=10000
     )
 
@@ -230,8 +229,7 @@ def test_create_individual(tmp_path):
         ['uv', 'run', 'python', 'src/llm_mutation.py',
          f'{SOTA}/model.py', output, prompt,
          '--top_p', '0.1', '--temperature', '0.17',
-         '--apply_quality_control', 'False',
-         '--inference_submission', 'True'],
+         '--apply_quality_control', 'False'],
         cwd=ROOT, capture_output=True, text=True, timeout=600
     )
     assert result.returncode == 0, f"LLM mutation failed: {result.stderr[-300:]}"
