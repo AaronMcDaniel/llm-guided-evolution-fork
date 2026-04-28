@@ -214,6 +214,8 @@ jobs:
           """
           (root / "index.html").write_text(html_page, encoding="utf-8")
           (root / ".nojekyll").write_text("", encoding="utf-8")
+          runs_list = [p.name for p in sorted(runs_dir.glob("*"), reverse=True) if p.is_dir()]
+          (root / "runs" / "runs_list.json").write_text(json.dumps(runs_list), encoding="utf-8")
           PY
 
       - name: Commit and push site history
