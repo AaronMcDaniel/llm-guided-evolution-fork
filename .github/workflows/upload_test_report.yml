@@ -164,55 +164,6 @@ jobs:
           runs_dir = root / "runs"
           runs_dir.mkdir(parents=True, exist_ok=True)
 
-          entries = []
-          for p in sorted(runs_dir.glob("*"), reverse=True):
-              meta = p / "metadata.json"
-              if meta.exists():
-                  entries.append(json.loads(meta.read_text()))
-
-          rows = []
-          for item in entries:
-              rows.append(f"""
-              <tr>
-                <td>{html.escape(item["time"])}</td>
-                <td>{html.escape(item["user"])}</td>
-                <td><a href="{html.escape(item["commit_url"])}">{html.escape(item["commit_short_sha"])}</a></td>
-                <td>{html.escape(item["commit_title"])}</td>
-                <td><pre style="white-space:pre-wrap;margin:0">{html.escape(item["commit_message"])}</pre></td>
-                <td><a href="{html.escape(item["actions_url"])}">run {html.escape(str(item["run_number"]))}</a></td>
-                <td><a href="{html.escape(item["report_path"])}">xml</a></td>
-              </tr>
-              """)
-
-          html_page = f"""<!doctype html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Workflow Report History</title>
-          </head>
-          <body>
-            <h1>Workflow Report History</h1>
-            <p>Total runs stored: {len(entries)}</p>
-            <table border="1" cellpadding="6" cellspacing="0">
-              <thead>
-                <tr>
-                  <th>Date / Time</th>
-                  <th>User</th>
-                  <th>Commit</th>
-                  <th>Commit title</th>
-                  <th>Commit message</th>
-                  <th>Actions run</th>
-                  <th>XML report</th>
-                </tr>
-              </thead>
-              <tbody>
-                {''.join(rows)}
-              </tbody>
-            </table>
-          </body>
-          </html>
-          """
-          (root / "index.html").write_text(html_page, encoding="utf-8")
           (root / ".nojekyll").write_text("", encoding="utf-8")
           runs_list = [p.name for p in sorted(runs_dir.glob("*"), reverse=True) if p.is_dir()]
           (root / "runs" / "runs_list.json").write_text(json.dumps(runs_list), encoding="utf-8")
