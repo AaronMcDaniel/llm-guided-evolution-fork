@@ -2,7 +2,8 @@
 #SBATCH --job-name=LLMGE01_Server
 #SBATCH -t 8:00:00
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:h200:2
+#SBATCH -G 2
+#SBATCH -C "H200"
 #SBATCH --mem 160G
 #SBATCH -c 16
 #SBATCH --output=run_job_outputs/server/slurm-%j.out
