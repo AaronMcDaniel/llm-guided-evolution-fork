@@ -44,6 +44,73 @@ jobs:
           fi
         shell: bash
 
+      - name: Start LLM server 
+        run: |
+          set -euo pipefail
+
+          # Submit the LLM server as a separate Slurm job.
+          echo "Submitting LLM server job..."
+          SERVER_JOB_ID=$(sbatch --parsable server.sh)
+
+          echo "Submitted server job: $SERVER_JOB_ID"
+
+          # Wait for server.sh to write hostname.log.
+          echo "Waiting for hostname.log..."
+
+          for i in {1..60}; do
+              if [ -s hostname.log ]; then
+                  SERVER_HOSTNAME=$(cat hostname.log)
+                  echo "Server hostname: $SERVER_HOSTNAME"
+                  break
+              fi
+
+              echo "hostname.log not ready yet... ($i/60)"
+              sleep 10
+          done
+
+          # If hostname.log was never created, the server probably failed to start
+          # or is still stuck in the Slurm queue.
+
+          if [ ! -s hostname.log ]; then
+              echo "ERROR: hostname.log was not created"
+              sacct -j "$SERVER_JOB_ID" --format=JobID,JobName,State,ExitCode,Elapsed
+              exit 1
+          fi
+
+          # Read the server hostname and construct the server URL.
+          # This must match the port used in server.sh:
+          # uv run uvicorn server:app --host $SERVER_HOSTNAME --port 8137
+
+          SERVER_HOSTNAME=$(cat hostname.log)
+          SERVER_URL="http://${SERVER_HOSTNAME}:8137/"
+
+          echo "Waiting for LLM server at $SERVER_URL"
+
+
+          # Wait until the server responds successfully.
+
+          for i in {1..120}; do
+              if curl -fsS --connect-timeout 5 --max-time 10 "$SERVER_URL" > /dev/null; then
+                  echo "LLM server is ready"
+                  break
+              fi
+
+              echo "LLM server not ready yet... ($i/120)"
+              sleep 10
+          done
+
+          # Final readiness check.
+          # If this fails, stop the test job instead of running tests against
+          # a server that is not ready.
+          curl -fsS --connect-timeout 5 --max-time 10 "$SERVER_URL" > /dev/null || {
+              echo "ERROR: LLM server failed readiness check"
+              sacct -j "$SERVER_JOB_ID" --format=JobID,JobName,State,ExitCode,Elapsed
+              exit 1
+          }
+
+          echo "LLM server verified successfully"
+        shell: bash
+
       - name: Submit job to Slurm
         run: |
           JOB_ID=$(sbatch --parsable slurm-submit-test.sh)
