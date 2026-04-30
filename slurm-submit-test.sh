@@ -9,7 +9,7 @@
 #SBATCH -o slurm-%j.out
 #SBATCH -e slurm-%j.err
 
-# pgrep -f '[/]server\.sh' > /dev/null || bash ./server.sh
+pgrep -f '[/]server\.sh' > /dev/null || bash ./server.sh
 
 set -euo pipefail
 
