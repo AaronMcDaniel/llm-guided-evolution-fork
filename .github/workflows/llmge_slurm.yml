@@ -311,5 +311,17 @@ jobs:
           name: junit-report
           path: tests/results/report.xml
 
+      - name: Run documentation suggestions
+        if: always()
+        run: |
+          BASE_SHA=$(git rev-parse HEAD~1)
+          HEAD_SHA=$(git rev-parse HEAD)
+          python3 src/doc_checker.py "$BASE_SHA" "$HEAD_SHA"
+        shell: bash
 
-
+      - name: Upload doc suggestions
+        if: always()
+        uses: actions/upload-artifact@v3-node20
+        with:
+          name: doc-suggestions
+          path: tests/results/doc_suggestions.json
