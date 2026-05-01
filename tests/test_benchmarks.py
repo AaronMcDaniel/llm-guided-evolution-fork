@@ -108,8 +108,7 @@ def test_mutation_benchmark(gene_id, tmp_path):
         ['uv', 'run', 'python', 'src/llm_mutation.py',
          parent, child, prompt,
          '--top_p', '0.1', '--temperature', '0.17',
-         '--apply_quality_control', 'False',
-         '--inference_submission', 'True'],
+         '--apply_quality_control', 'False'],
         cwd=ROOT, capture_output=True, text=True, timeout=10000
     )
 
