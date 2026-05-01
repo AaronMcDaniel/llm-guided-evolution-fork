@@ -22,7 +22,13 @@ jobs:
           scontrol ping
           sinfo >/dev/null
         shell: bash
-        
+      
+      - name: Create symlink for .venv
+        run: |
+          mkdir -p ~/scratch/.venv_runner
+          ln -sfn ~/scratch/.venv_runner .venv
+        shell: bash
+
       - name: Prepare Titanic data
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
