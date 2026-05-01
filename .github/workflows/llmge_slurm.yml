@@ -27,6 +27,8 @@ jobs:
         run: |
           mkdir -p ~/scratch/.venv_runner
           ln -sfn ~/scratch/.venv_runner .venv
+          ls -ld .venv
+          readlink -f .venv
         shell: bash
 
       - name: Prepare Titanic data
