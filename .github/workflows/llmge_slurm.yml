@@ -39,17 +39,19 @@ jobs:
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
         run: | 
           export KAGGLE_API_TOKEN=$KAGGLE_KEY
+          # Ensure Python 3.12 is used for compatibility
+          uv python install 3.12
           cd sota/Titanic || exit 1 
-          uv run kaggle competitions list -s titanic
+          uv run --python 3.12 kaggle competitions list -s titanic
           if [ ! -f "data/train.csv" ]; then
             (
               chmod +x pull_data.sh
-              uv run ./pull_data.sh
+              uv run --python 3.12 ./pull_data.sh
             )
           fi
 
           if [ ! -f "data/processed_train.csv" ]; then
-            uv run python preprocess.py
+            uv run --python 3.12 python preprocess.py
             
           fi
         shell: bash
