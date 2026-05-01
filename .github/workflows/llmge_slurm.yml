@@ -59,6 +59,9 @@ jobs:
       - name: Start LLM server 
         run: |
           set -euo pipefail
+          
+          # Clean up any stale hostname.log from previous runs
+          rm -f hostname.log
 
           rm -f hostname.log
 
@@ -92,10 +95,8 @@ jobs:
           fi
 
           # Read the server hostname and construct the server URL.
-          # This must match the port used in server.sh:
-          # uv run uvicorn server:app --host $SERVER_HOSTNAME --port 8137
-
-          SERVER_HOSTNAME=$(cat hostname.log)
+          # Use xargs to trim whitespace and tr to remove carriage returns.
+          SERVER_HOSTNAME=$(cat hostname.log | xargs | tr -d '\r')
           SERVER_URL="http://${SERVER_HOSTNAME}:8137/"
 
           echo "Waiting for LLM server at $SERVER_URL"
