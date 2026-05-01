@@ -32,3 +32,6 @@ dependencies = [
     "matplotlib",
     "tensorflow>=2.20.0",
 ]
+
+[tool.pytest.ini_options]
+junit_logging = "system-out"
