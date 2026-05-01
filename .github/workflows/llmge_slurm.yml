@@ -56,6 +56,8 @@ jobs:
         run: |
           set -euo pipefail
 
+          rm -f hostname.log
+
           # Submit the LLM server as a separate Slurm job.
           echo "Submitting LLM server job..."
           SERVER_JOB_ID=$(sbatch --parsable server.sh)
@@ -65,7 +67,7 @@ jobs:
           # Wait for server.sh to write hostname.log.
           echo "Waiting for hostname.log..."
 
-          for i in {1..60}; do
+          for i in {1..120}; do
               if [ -s hostname.log ]; then
                   SERVER_HOSTNAME=$(cat hostname.log)
                   echo "Server hostname: $SERVER_HOSTNAME"
