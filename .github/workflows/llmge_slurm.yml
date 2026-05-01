@@ -57,8 +57,7 @@ jobs:
       - name: Start LLM server 
         run: |
           set -euo pipefail
-          
-          # Clean up any stale hostname.log from previous runs
+
           rm -f hostname.log
 
           # Submit the LLM server as a separate Slurm job.
@@ -77,7 +76,7 @@ jobs:
                   break
               fi
 
-              echo "hostname.log not ready yet... ($i/60)"
+              echo "hostname.log not ready yet... ($i/120)"
               sleep 10
           done
 
@@ -91,8 +90,10 @@ jobs:
           fi
 
           # Read the server hostname and construct the server URL.
-          # Use xargs to trim whitespace and tr to remove carriage returns.
-          SERVER_HOSTNAME=$(cat hostname.log | xargs | tr -d '\r')
+          # This must match the port used in server.sh:
+          # uv run uvicorn server:app --host $SERVER_HOSTNAME --port 8137
+
+          SERVER_HOSTNAME=$(cat hostname.log)
           SERVER_URL="http://${SERVER_HOSTNAME}:8137/"
 
           echo "Waiting for LLM server at $SERVER_URL"
