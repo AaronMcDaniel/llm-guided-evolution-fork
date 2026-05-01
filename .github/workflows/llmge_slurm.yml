@@ -58,13 +58,49 @@ jobs:
         run: |
           set -euo pipefail
 
-          rm -f hostname.log
+          SERVER_JOB_NAME="LLMGE01_Server"
+          SERVER_PORT="8137"
 
-          # Submit the LLM server as a separate Slurm job.
-          echo "Submitting LLM server job..."
-          SERVER_JOB_ID=$(sbatch --parsable server.sh)
+          echo "Checking for existing Slurm server job named ${SERVER_JOB_NAME}..."
 
-          echo "Submitted server job: $SERVER_JOB_ID"
+          # Prefer an already RUNNING server job.
+          SERVER_JOB_ID=$(
+            squeue -h \
+              -u "$USER" \
+              -n "$SERVER_JOB_NAME" \
+              -t RUNNING \
+              -o "%A" | head -n 1 || true
+          )
+
+          if [ -n "$SERVER_JOB_ID" ]; then
+              echo "Found existing running server job: $SERVER_JOB_ID"
+              echo "Will reuse existing server instead of submitting server.sh again."
+          else
+              # Also avoid duplicate submission if another run already submitted it
+              # and it is still waiting to start.
+              SERVER_JOB_ID=$(
+                squeue -h \
+                  -u "$USER" \
+                  -n "$SERVER_JOB_NAME" \
+                  -t PENDING,CONFIGURING \
+                  -o "%A" | head -n 1 || true
+              )
+
+              if [ -n "$SERVER_JOB_ID" ]; then
+                  echo "Found existing queued/starting server job: $SERVER_JOB_ID"
+                  echo "Will wait for this job instead of submitting server.sh again."
+              else
+                  echo "No existing ${SERVER_JOB_NAME} job found."
+                  echo "Submitting new LLM server job..."
+
+                  # Only delete hostname.log when we know there is no active server job.
+                  # This avoids deleting the hostname file from a server that is already running.
+                  rm -f hostname.log
+
+                  SERVER_JOB_ID=$(sbatch --parsable server.sh)
+                  echo "Submitted server job: $SERVER_JOB_ID"
+              fi
+          fi
 
           # Wait for server.sh to write hostname.log.
           echo "Waiting for hostname.log..."
