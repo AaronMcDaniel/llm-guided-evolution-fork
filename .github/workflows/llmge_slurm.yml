@@ -33,6 +33,14 @@ jobs:
           readlink -f .venv
         shell: bash
 
+      - name: Create symlink for .cache
+        run: |
+          mkdir -p ~/scratch/.cache_runner
+          ln -sfn ~/scratch/.cache_runner .cache
+          ls -ld .cache
+          readlink -f .cache
+        shell: bash
+
       - name: Prepare Titanic data
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
@@ -60,6 +68,66 @@ jobs:
 
           SERVER_JOB_NAME="LLMGE01_Server"
           SERVER_PORT="8137"
+          REUSED_RUNNING_SERVER="false"
+
+          connectivity_check() {
+              # Wait for server.sh to write hostname.log.
+              echo "Waiting for hostname.log..."
+
+              for i in {1..120}; do
+                if [ -s hostname.log ]; then
+                  SERVER_HOSTNAME=$(cat hostname.log)
+                  echo "Server hostname: $SERVER_HOSTNAME"
+                  break
+                fi
+
+                echo "hostname.log not ready yet... ($i/120)"
+                sleep 10
+              done
+
+              # If hostname.log was never created, the server probably failed to start
+              # or is still stuck in the Slurm queue.
+
+              if [ ! -s hostname.log ]; then
+                echo "ERROR: hostname.log was not created"
+                sacct -j "$SERVER_JOB_ID" --format=JobID,JobName,State,ExitCode,Elapsed
+                return 1
+              fi
+
+              # Read the server hostname and construct the server URL.
+              # This must match the port used in server.sh:
+              # uv run uvicorn server:app --host $SERVER_HOSTNAME --port 8137
+
+              SERVER_HOSTNAME=$(cat hostname.log)
+              SERVER_URL="http://${SERVER_HOSTNAME}:8137/"
+
+              echo "Waiting for LLM server at $SERVER_URL"
+
+              # Wait until the server responds successfully.
+
+              for i in {1..120}; do
+                if curl -fsS --connect-timeout 5 --max-time 10 "$SERVER_URL" > /dev/null; then
+                  echo "LLM server is ready"
+                  break
+                fi
+
+                echo "LLM server not ready yet... ($i/120)"
+                sleep 10
+              done
+
+              # Final readiness check.
+              # If this fails, stop the test job instead of running tests against
+              # a server that is not ready.
+              curl -fsS --connect-timeout 5 --max-time 10 "$SERVER_URL" > /dev/null || {
+                echo "ERROR: LLM server failed readiness check"
+                sacct -j "$SERVER_JOB_ID" --format=JobID,JobName,State,ExitCode,Elapsed
+                return 1
+              }
+
+              echo "LLM server verified successfully"
+              cp hostname.log .cache/hostname.log
+              echo "Saved hostname.log to .cache/hostname.log"
+          }
 
           echo "Checking for existing Slurm server job named ${SERVER_JOB_NAME}..."
 
@@ -71,25 +139,42 @@ jobs:
               -t RUNNING \
               -o "%A" | head -n 1 || true
           )
-
+          
           if [ -n "$SERVER_JOB_ID" ]; then
               echo "Found existing running server job: $SERVER_JOB_ID"
-              echo "Will reuse existing server instead of submitting server.sh again."
-          else
-              # Also avoid duplicate submission if another run already submitted it
-              # and it is still waiting to start.
-              SERVER_JOB_ID=$(
+              echo "Checking .cache for hostname.log..."
+
+              if [ -s .cache/hostname.log ]; then
+                cp .cache/hostname.log hostname.log
+                echo "Copied .cache/hostname.log to hostname.log"
+                if ! connectivity_check; then
+                  echo "Connectivity check failed for existing running job; proceeding to fallback server startup path."
+                  SERVER_JOB_ID=""
+                else
+                  REUSED_RUNNING_SERVER="true"
+                fi
+                
+              else
+                  echo "ERROR: hostname.log not found in .cache for running server job."
+                  exit 1
+              fi
+          fi
+
+              if [ -z "$SERVER_JOB_ID" ]; then
+                # Also avoid duplicate submission if another run already submitted it
+                # and it is still waiting to start.
+                SERVER_JOB_ID=$(
                 squeue -h \
                   -u "$USER" \
                   -n "$SERVER_JOB_NAME" \
                   -t PENDING,CONFIGURING \
                   -o "%A" | head -n 1 || true
-              )
+                )
 
-              if [ -n "$SERVER_JOB_ID" ]; then
+                if [ -n "$SERVER_JOB_ID" ]; then
                   echo "Found existing queued/starting server job: $SERVER_JOB_ID"
                   echo "Will wait for this job instead of submitting server.sh again."
-              else
+                else
                   echo "No existing ${SERVER_JOB_NAME} job found."
                   echo "Submitting new LLM server job..."
 
@@ -99,64 +184,15 @@ jobs:
 
                   SERVER_JOB_ID=$(sbatch --parsable server.sh)
                   echo "Submitted server job: $SERVER_JOB_ID"
+                fi
               fi
+
+          if [ "$REUSED_RUNNING_SERVER" = "true" ]; then
+            exit 0
           fi
 
-          # Wait for server.sh to write hostname.log.
-          echo "Waiting for hostname.log..."
+          connectivity_check
 
-          for i in {1..120}; do
-              if [ -s hostname.log ]; then
-                  SERVER_HOSTNAME=$(cat hostname.log)
-                  echo "Server hostname: $SERVER_HOSTNAME"
-                  break
-              fi
-
-              echo "hostname.log not ready yet... ($i/120)"
-              sleep 10
-          done
-
-          # If hostname.log was never created, the server probably failed to start
-          # or is still stuck in the Slurm queue.
-
-          if [ ! -s hostname.log ]; then
-              echo "ERROR: hostname.log was not created"
-              sacct -j "$SERVER_JOB_ID" --format=JobID,JobName,State,ExitCode,Elapsed
-              exit 1
-          fi
-
-          # Read the server hostname and construct the server URL.
-          # This must match the port used in server.sh:
-          # uv run uvicorn server:app --host $SERVER_HOSTNAME --port 8137
-
-          SERVER_HOSTNAME=$(cat hostname.log)
-          SERVER_URL="http://${SERVER_HOSTNAME}:8137/"
-
-          echo "Waiting for LLM server at $SERVER_URL"
-
-
-          # Wait until the server responds successfully.
-
-          for i in {1..120}; do
-              if curl -fsS --connect-timeout 5 --max-time 10 "$SERVER_URL" > /dev/null; then
-                  echo "LLM server is ready"
-                  break
-              fi
-
-              echo "LLM server not ready yet... ($i/120)"
-              sleep 10
-          done
-
-          # Final readiness check.
-          # If this fails, stop the test job instead of running tests against
-          # a server that is not ready.
-          curl -fsS --connect-timeout 5 --max-time 10 "$SERVER_URL" > /dev/null || {
-              echo "ERROR: LLM server failed readiness check"
-              sacct -j "$SERVER_JOB_ID" --format=JobID,JobName,State,ExitCode,Elapsed
-              exit 1
-          }
-
-          echo "LLM server verified successfully"
         shell: bash
 
       - name: Submit job to Slurm
