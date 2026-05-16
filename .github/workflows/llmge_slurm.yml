@@ -159,33 +159,33 @@ jobs:
                   exit 1
               fi
           fi
+          
+          if [ -z "$SERVER_JOB_ID" ]; then
+            # Also avoid duplicate submission if another run already submitted it
+            # and it is still waiting to start.
+            SERVER_JOB_ID=$(
+            squeue -h \
+              -u "$USER" \
+              -n "$SERVER_JOB_NAME" \
+              -t PENDING,CONFIGURING \
+              -o "%A" | head -n 1 || true
+            )
 
-              if [ -z "$SERVER_JOB_ID" ]; then
-                # Also avoid duplicate submission if another run already submitted it
-                # and it is still waiting to start.
-                SERVER_JOB_ID=$(
-                squeue -h \
-                  -u "$USER" \
-                  -n "$SERVER_JOB_NAME" \
-                  -t PENDING,CONFIGURING \
-                  -o "%A" | head -n 1 || true
-                )
+            if [ -n "$SERVER_JOB_ID" ]; then
+              echo "Found existing queued/starting server job: $SERVER_JOB_ID"
+              echo "Will wait for this job instead of submitting server.sh again."
+            else
+              echo "No existing ${SERVER_JOB_NAME} job found."
+              echo "Submitting new LLM server job..."
 
-                if [ -n "$SERVER_JOB_ID" ]; then
-                  echo "Found existing queued/starting server job: $SERVER_JOB_ID"
-                  echo "Will wait for this job instead of submitting server.sh again."
-                else
-                  echo "No existing ${SERVER_JOB_NAME} job found."
-                  echo "Submitting new LLM server job..."
+              # Only delete hostname.log when we know there is no active server job.
+              # This avoids deleting the hostname file from a server that is already running.
+              rm -f hostname.log
 
-                  # Only delete hostname.log when we know there is no active server job.
-                  # This avoids deleting the hostname file from a server that is already running.
-                  rm -f hostname.log
-
-                  SERVER_JOB_ID=$(sbatch --parsable server.sh)
-                  echo "Submitted server job: $SERVER_JOB_ID"
-                fi
-              fi
+              SERVER_JOB_ID=$(sbatch --parsable server.sh)
+              echo "Submitted server job: $SERVER_JOB_ID"
+            fi
+          fi
 
           if [ "$REUSED_RUNNING_SERVER" = "true" ]; then
             exit 0
