@@ -157,7 +157,7 @@ def main():
     output_file = Path(args.output)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    out_files = sorted(input_dir.glob("*.out"))
+    out_files = sorted(input_dir.rglob("*.out"))
     rows = [summarize_file(path) for path in out_files]
 
     fieldnames = [

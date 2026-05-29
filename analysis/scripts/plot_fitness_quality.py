@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import os
+
+os.environ.setdefault("MPLCONFIGDIR", "analysis/results/analysis/matplotlib-cache")
+import matplotlib.pyplot as plt
 
 def generate_fitness_quality_chart(csv_path, output_path="results/analysis/fitness_quality_summary.png"):
     # Load the CSV

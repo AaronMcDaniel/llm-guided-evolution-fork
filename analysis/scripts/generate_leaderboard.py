@@ -25,9 +25,9 @@ def generate_leaderboard(csv_path, output_path="results/analysis/top_10_leaderbo
 
     top_10.to_csv(output_path, index=False)
     print(f"Saved leaderboard CSV to {output_path}\n")
-    
+
     print("--- Top Individuals Leaderboard Preview ---")
-    print(top_10.to_markdown(index=False))
+    print(top_10.to_string(index=False))
 
 if __name__ == '__main__':
     import argparse

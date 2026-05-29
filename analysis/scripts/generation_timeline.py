@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 """
 Make:
 line or bar chart of generation number vs completion time / duration proxy
@@ -12,7 +14,9 @@ useful if you want to show one controller run made it through 30 generations
 from pathlib import Path
 from collections import defaultdict, Counter
 import csv
+import os
 
+os.environ.setdefault("MPLCONFIGDIR", "analysis/results/analysis/matplotlib-cache")
 import matplotlib.pyplot as plt
 
 

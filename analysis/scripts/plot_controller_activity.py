@@ -1,7 +1,9 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 import os
+
+os.environ.setdefault("MPLCONFIGDIR", "analysis/results/analysis/matplotlib-cache")
+import matplotlib.pyplot as plt
 
 def generate_controller_activity_chart(csv_path, output_path="results/analysis/controller_activity_summary.png"):
     # Load the CSV

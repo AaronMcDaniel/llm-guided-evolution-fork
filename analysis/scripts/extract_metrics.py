@@ -183,13 +183,8 @@ def collect_candidate_files(repo_root: Path) -> list[Path]:
 
         rel = path.relative_to(repo_root).as_posix()
 
-        # Raw slurm logs in repo root
-        if path.name.startswith("slurm-") and path.suffix == ".out":
-            files.append(path)
-            continue
-
-        # Report-style slurm logs in test data
-        if rel.startswith("analysis/test_data/") and path.suffix == ".out":
+        # Slurm logs can live at repo root or in nested run output folders.
+        if path.suffix == ".out":
             files.append(path)
             continue
 

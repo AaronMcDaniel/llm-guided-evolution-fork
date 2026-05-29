@@ -1,6 +1,8 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
+
+os.environ.setdefault("MPLCONFIGDIR", "analysis/results/analysis/matplotlib-cache")
+import matplotlib.pyplot as plt
 
 def generate_entity_status_chart(csv_path, output_path="results/analysis/entity_status_summary.png"):
     # Load the CSV
