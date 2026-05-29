@@ -1186,3 +1186,4 @@ if __name__ == "__main__":
         print(f"Best Fitness: {best_ind.fitness.values}")
         
     print("-- End of Era --")
+
