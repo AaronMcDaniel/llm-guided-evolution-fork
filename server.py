@@ -7,7 +7,6 @@ import torch
 import transformers
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-
 from src.cfg.constants import *
 
 app = FastAPI(title="LLM API", version="1.0")

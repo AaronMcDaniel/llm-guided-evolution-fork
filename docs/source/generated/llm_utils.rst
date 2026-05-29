@@ -32,6 +32,7 @@
       submit_llama3_hf
       submit_mixtral
       submit_mixtral_hf
+      submit_mixtral_local
       submit_qwen
    
    .. rubric:: Classes
