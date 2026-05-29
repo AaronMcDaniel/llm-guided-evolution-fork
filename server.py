@@ -26,15 +26,15 @@ class LLMModel:
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
-                    print(f"Loading model at {MODEL_PATH} for the first time")
+                    print(f"Loading model at {MODEL_PATH} for the first time", flush=True)
                     cls._instance = super(LLMModel, cls).__new__(cls)
                     cls._instance._initialize()
-                    print('I created my instance')
-                    print(dir(cls._instance))            
+                    print('I created my instance', flush=True)
+                    print(dir(cls._instance), flush=True)            
         return cls._instance
     
     def _initialize(self):
-        print("initializing")
+        print("initializing", flush=True)
         # TODO figure out how to better handle the initialization (i.e. mixtral dies because it doesn't have attention)
         # TODO find out why when this dies the code around it continues i.e. a model is returned to generate_text, but I never see the print out of "I created my instance"
         self.model = transformers.AutoModelForCausalLM.from_pretrained(
@@ -44,10 +44,10 @@ class LLMModel:
             device_map="auto",
             attn_implementation="sdpa" # faster inference
         ).eval()
-        print("model loaded")
+        print("model loaded", flush=True)
 
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(MODEL_PATH)
-        print("tokenizer created")
+        print("tokenizer created", flush=True)
         
         # decoder-only models need left padding for correct generation order
         self.tokenizer.padding_side = "left"
@@ -70,13 +70,13 @@ class LLMModel:
             do_sample=True,
             batch_size=BATCH_SIZE # for batch support
         )
-        print("pipeline created")
+        print("pipeline created", flush=True)
         
         self.request_queue = asyncio.Queue() # queue for holding requests to process
         self.batch_task = None # current task
         self.batch_lock = asyncio.Lock() # lock for
         self.is_processing = False # current state
-        print("ready to go")
+        print("ready to go", flush=True)
     
     async def start_batch_processor(self):
         """Start the batch processor if it's not already running"""
@@ -112,7 +112,7 @@ class LLMModel:
                             break
                     
                     batch_size = len(batch)
-                    print(f"Processing batch of {batch_size} requests")
+                    print(f"Processing batch of {batch_size} requests", flush=True)
                     
                     prompts = [req["prompt"] for req in batch]
                     
@@ -147,7 +147,7 @@ class LLMModel:
                         self.request_queue.task_done()
                 
                 except Exception as e:
-                    print(f"Error processing batch: {str(e)}")
+                    print(f"Error processing batch: {str(e)}", flush=True)
                     for future in futures:
                         if not future.done():
                             future.set_exception(e)
@@ -161,9 +161,9 @@ class LLMModel:
                     await asyncio.sleep(0.01)
         
         except asyncio.CancelledError:
-            print("Batch processor cancelled")
+            print("Batch processor cancelled", flush=True)
         except Exception as e:
-            print(f"Unexpected error in batch processor: {str(e)}")
+            print(f"Unexpected error in batch processor: {str(e)}", flush=True)
         finally:
             async with self.batch_lock:
                 self.is_processing = False
@@ -174,9 +174,9 @@ class LLMModel:
         future = asyncio.Future()
         
         # put in queue
-        print('Hey I am about to access the request queue attribute')
+        print('Hey I am about to access the request queue attribute', flush=True)
         await self.request_queue.put((request_dict, future))
-        print('No problem, I got it')
+        print('No problem, I got it', flush=True)
         
         # start processing batches if not already started
         await self.start_batch_processor()
@@ -210,15 +210,15 @@ async def generate_text(request: LLMRequest):
         
         # Get the model instance
         model = LLMModel()
-        print(dir(model))
+        print(dir(model), flush=True)
         
         # Submit to the batch processor and wait for result
         start_time = time.time()
-        print(f"Request received at {time.strftime('%H:%M:%S', time.localtime(start_time))}")
+        print(f"Request received at {time.strftime('%H:%M:%S', time.localtime(start_time))}", flush=True)
         
         result = await model.generate(request_dict)
         
-        print(f"Request completed in {time.time() - start_time:.2f}s")
+        print(f"Request completed in {time.time() - start_time:.2f}s", flush=True)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -227,7 +227,7 @@ async def generate_text(request: LLMRequest):
 async def root():
     return {"message": "LLM API is running!"}
 
-print('Server running with server-side batching!')
+print('Server running with server-side batching!', flush=True)
 
 
 @app.on_event("startup")
