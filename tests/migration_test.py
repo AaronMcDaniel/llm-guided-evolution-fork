@@ -1,5 +1,6 @@
 import os
 import pickle
+import pytest
 
 def loadcheckpoint(folder_name="checkpoints", checkpoint_file=None):
     if not os.path.exists(folder_name):
@@ -17,8 +18,31 @@ def loadcheckpoint(folder_name="checkpoints", checkpoint_file=None):
         return checkpoint_data, start_gen
     return None, None
 
+def _validate_checkpoint_data(data, label):
+    if data is None:
+        raise ValueError(f"{label} checkpoint was not loaded")
+    missing_keys = {"GLOBAL_DATA", "population"} - data.keys()
+    if missing_keys:
+        missing = ", ".join(sorted(missing_keys))
+        raise ValueError(f"{label} checkpoint is missing required key(s): {missing}")
+
+def _population_entry(population, individual):
+    wrapped_entry = [individual]
+    if wrapped_entry in population:
+        return wrapped_entry
+    if individual in population:
+        return individual
+    return wrapped_entry
+
 def migrate_individuals(source_data, target_data, top_n=3):
-    source_fitness = {key: value['fitness'][0] for key, value in source_data['GLOBAL_DATA'].items() if value['fitness']}
+    _validate_checkpoint_data(source_data, "source")
+    _validate_checkpoint_data(target_data, "target")
+
+    source_fitness = {
+        key: value['fitness'][0]
+        for key, value in source_data['GLOBAL_DATA'].items()
+        if value.get('fitness')
+    }
     
     sorted_source = sorted(source_fitness.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
@@ -26,10 +50,15 @@ def migrate_individuals(source_data, target_data, top_n=3):
         print(f"Migrating {source_individual} from source to target")
         target_data['GLOBAL_DATA'][source_individual] = source_data['GLOBAL_DATA'][source_individual]
 
-        target_data['population'].append(source_individual)
+        population_entry = _population_entry(source_data['population'], source_individual)
+        if population_entry not in target_data['population']:
+            target_data['population'].append(population_entry)
         
         del source_data['GLOBAL_DATA'][source_individual]
-        source_data['population'].remove([source_individual])
+        if population_entry in source_data['population']:
+            source_data['population'].remove(population_entry)
+
+    return target_data
     
     
 def save_checkpoint(checkpoint, gen, folder_name="checkpoints"):
@@ -39,9 +68,34 @@ def save_checkpoint(checkpoint, gen, folder_name="checkpoints"):
         pickle.dump(checkpoint, file)
     print(f"Checkpoint saved as {filename}")
 
-checkpoint1, start_gen1 = loadcheckpoint(folder_name="checkpoints/island_1", checkpoint_file="checkpoint_gen_0.pkl")
-checkpoint2, start_gen2 = loadcheckpoint(folder_name="checkpoints/island_2", checkpoint_file="checkpoint_gen_0.pkl")
+def test_migrate_individuals_moves_top_fitness_entries():
+    source = {
+        "GLOBAL_DATA": {
+            "a": {"fitness": (0.1,)},
+            "b": {"fitness": (0.9,)},
+            "c": {"fitness": (0.4,)},
+        },
+        "population": [["a"], ["b"], ["c"]],
+    }
+    target = {
+        "GLOBAL_DATA": {},
+        "population": [],
+    }
 
-updated_target_data = migrate_individuals(checkpoint1, checkpoint2)
+    updated_target_data = migrate_individuals(source, target, top_n=2)
 
+    assert set(updated_target_data["GLOBAL_DATA"]) == {"b", "c"}
+    assert updated_target_data["population"] == [["b"], ["c"]]
+    assert set(source["GLOBAL_DATA"]) == {"a"}
+    assert source["population"] == [["a"]]
+
+def test_migrate_individuals_requires_loaded_checkpoints():
+    with pytest.raises(ValueError, match="source checkpoint was not loaded"):
+        migrate_individuals(None, {"GLOBAL_DATA": {}, "population": []})
+
+if __name__ == "__main__":
+    checkpoint1, start_gen1 = loadcheckpoint(folder_name="checkpoints/island_1", checkpoint_file="checkpoint_gen_0.pkl")
+    checkpoint2, start_gen2 = loadcheckpoint(folder_name="checkpoints/island_2", checkpoint_file="checkpoint_gen_0.pkl")
+
+    updated_target_data = migrate_individuals(checkpoint1, checkpoint2)
 

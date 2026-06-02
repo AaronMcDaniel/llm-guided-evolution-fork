@@ -38,7 +38,7 @@ def get_args():
     parser.add_argument('-imgsz', type=int, default=224, help="image size")
     # parser.add_argument('-imgsz', type=int, default=124, help="image size")
     parser.add_argument('-val_r', type=float, default=0, help="ratio of val dataset accounting for training set")
-    parser.add_argument('-worker', default=8)
+    parser.add_argument('-worker', type=int, default=8)
     parser.add_argument('-seed', default=None)
     parser.add_argument('-network', type=str, default="network", help="model file")
     return parser.parse_args()
