@@ -2,7 +2,8 @@
 #SBATCH --job-name=LLMGE01_Server
 #SBATCH -t 8:00:00
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:h200:2
+#SBATCH -G 2
+#SBATCH -C "H200"
 #SBATCH --mem 160G
 #SBATCH -c 16
 #SBATCH --output=run_job_outputs/server/slurm-%j.out
@@ -34,4 +35,4 @@ echo "Starting LLM server on host: $SERVER_HOSTNAME (count=$COUNT)"
 echo "Submitting island controller (count=$COUNT)"
 sbatch island_controller.sbatch "$COUNT" "$SLURM_JOB_ID"
 
-uv run uvicorn server:app --host $SERVER_HOSTNAME --port 8137 --workers 1
+uv run python -m uvicorn server:app --host $SERVER_HOSTNAME --port 8137 --workers 1
