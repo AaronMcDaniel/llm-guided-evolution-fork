@@ -112,6 +112,8 @@ else:
 # resolves to {MODEL}_{gene_id}
 RUNLINE_TMP = '{}_{}'
 EVAL_RUNLINE = "uv run python {} --model {} --variant_dir {VARIANT_DIR}"
+# Kill evaluation jobs that do not produce a terminal result in this window.
+EVAL_NO_PROGRESS_TIMEOUT_SECONDS = int(os.getenv("LLMGE_EVAL_NO_PROGRESS_TIMEOUT_SECONDS", str(40 * 60)))
 """
 Evolution Constants/Params
 """

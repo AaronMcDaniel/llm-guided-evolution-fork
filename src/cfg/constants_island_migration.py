@@ -5,6 +5,8 @@ import yaml
 
 # Whether we are running on PACE-ICE (True) or ICEHAMMER (False)
 PACE_ICE = True
+EVAL_NO_PROGRESS_TIMEOUT_SECONDS = int(os.getenv("LLMGE_EVAL_NO_PROGRESS_TIMEOUT_SECONDS", str(40 * 60)))
+
 
 # Root directory of the repository
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

@@ -7,6 +7,8 @@ import torch
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sota_root = os.path.join(root_dir, "sota", "Point-Transformers")
 ROOT_DIR = os.getenv("LLMGE_ROOT_DIR", root_dir)
+EVAL_NO_PROGRESS_TIMEOUT_SECONDS = int(os.getenv("LLMGE_EVAL_NO_PROGRESS_TIMEOUT_SECONDS", str(40 * 60)))
+
 SLURM_CONFIG_DIR = os.getenv(
 	"LLMGE_SLURM_CONFIG_DIR",
 	os.path.join(ROOT_DIR, "slurm-config"),
